@@ -18,6 +18,7 @@ try {
 let avg = 1 / 60;           // smoothed frame time
 let calm = 0;               // seconds in a row with comfortable frame times
 let cooldown = 3;           // no decisions right after start or a change
+let ceiling = PRESETS.length - 1;
 const listeners = [];
 
 export const quality = () => PRESETS[level];
@@ -44,9 +45,11 @@ export function qualityTick(dt) {
   if (mode !== 'auto') return;
   cooldown -= dt;
   if (cooldown > 0) return;
-  if (avg > 1 / 50) { setLevel(level - 1); return; }           // below ~50 fps on average
-  if (avg < 1 / 58) calm += dt; else calm = 0;
-  if (calm > 20 && level < PRESETS.length - 1) setLevel(level + 1);
+  // below ~45 fps on average (a 50 Hz display running smoothly must not count as slow)
+  // a level that proved too slow becomes the ceiling, so auto never bounces between two levels
+  if (avg > 1 / 45) { ceiling = level - 1; setLevel(level - 1); return; }
+  if (avg < 1 / 48) calm += dt; else calm = 0;
+  if (calm > 20 && level < ceiling) setLevel(level + 1);
 }
 
 export const frameTime = () => avg;
