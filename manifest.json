@@ -1,13 +1,13 @@
 {
   "files": {
-    "css/main.css": "4209889b27",
+    "css/main.css": "9dded7e663",
     "js/core/i18n.js": "0c954a0d67",
     "js/core/input.js": "5296f7f256",
     "js/core/loop.js": "af7351dd6a",
     "js/core/quality.js": "188dd064b7",
     "js/main.js": "8cd8e6f538",
-    "js/mesh/builder.js": "6fe6f0fd12",
-    "js/player/proto.js": "c2baa6bdab",
+    "js/mesh/builder.js": "7580eb496d",
+    "js/player/proto.js": "34e8f0a61e",
     "js/render/atmosphere.js": "9b4a27b8b3",
     "js/render/renderer.js": "3887f550d7",
     "js/world/decor.js": "9d378041e1",

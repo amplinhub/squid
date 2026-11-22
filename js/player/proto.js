@@ -48,7 +48,7 @@ export function createProtoSquid(scene, spawn) {
   const { root, body, tentacles } = buildBody();
   scene.add(root);
   // a little light just for the placeholder (the world itself is unlit, its light is baked)
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x404858, 1.6));
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x506070, 3.2));
   const L = 30;                                   // body length in units (the original starts at 30)
   body.scale.setScalar(L / MODEL_LEN);
   const p = { x: spawn.x, y: spawn.y, z: terrainH(spawn.x, spawn.y) + 170 };

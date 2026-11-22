@@ -86,10 +86,14 @@ export class MeshBuilder {
     if (l < 1e-7) return;
     nx /= l; ny /= l; nz /= l;
     const cz = (z1 + z2 + z3) / 3;
+    let flipped = false;
     if (this.mode === 0) {
       const cx = (x1 + x2 + x3) / 3, cy = (y1 + y2 + y3) / 3;
-      if ((cx - this.rx) * nx + (cy - this.ry) * ny + (cz - this.rz) * nz < 0) { nx = -nx; ny = -ny; nz = -nz; }
-    } else if (this.mode === 1 && nz < 0) { nx = -nx; ny = -ny; nz = -nz; }
+      if ((cx - this.rx) * nx + (cy - this.ry) * ny + (cz - this.rz) * nz < 0) { nx = -nx; ny = -ny; nz = -nz; flipped = true; }
+    } else if (this.mode === 1 && nz < 0) { nx = -nx; ny = -ny; nz = -nz; flipped = true; }
+    // the axis swap to three.js mirrors the winding: order the vertices so the front face looks along the
+    // oriented normal (so one-sided materials can cull back faces)
+    if (!flipped) { let t = x2; x2 = x3; x3 = t; t = y2; y2 = y3; y3 = t; t = z2; z2 = z3; z3 = t; }
     let lit;
     if (this.world) {
       lit = 0.50 + 0.62 * Math.max(0, nx * S.x + ny * S.y + nz * S.z) + 0.10 * Math.max(0, -nz);

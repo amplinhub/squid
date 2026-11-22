@@ -110,5 +110,5 @@ select { font: inherit; color: var(--text); background: var(--sea-0); border: 1p
 @media (orientation: portrait) {
   #touch-buttons { bottom: calc(var(--safe-b) + var(--u) * 2.2); }
   #stick-base { top: calc(100% - var(--safe-b) - var(--u) * 7.5); }
-  .hint { white-space: normal; width: 90vw; bottom: auto; top: calc(var(--safe-t) + var(--u) * 7); }
+  .hint { white-space: normal; width: 90vw; bottom: auto; top: calc(var(--safe-t) + var(--u) * 11); }
 }
