@@ -239,7 +239,7 @@ function frame(a, dt) {
 }
 
 // handle for automated checks in the browser console (no effect on the game)
-window.__gu = { player, world, atmo, camera, renderer, cam, creatures, fx, simStep, frame };
+window.__gu = { scene, player, world, atmo, camera, renderer, cam, creatures, fx, simStep, frame };
 
 load().then(() => {
   startLoop(simStep, frame);

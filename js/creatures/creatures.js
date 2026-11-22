@@ -23,7 +23,7 @@ const pdist = (x1, y1, x2, y2) => Math.hypot(x2 - x1, y2 - y1);
 
 // ---------------------------------------------------------------- models
 const OPAQUE = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide });
-const SEE_THROUGH = new THREE.MeshBasicMaterial({ vertexColors: true, vertexAlpha: true, transparent: true, depthWrite: false, side: THREE.DoubleSide });
+const SEE_THROUGH = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, side: THREE.DoubleSide });   // alpha: 4th colour channel
 const models = [];            // models[t] = { frames: [mouth 0..1][FLIP] geometry, puffer: [FLIP] }
 
 function buildSpecies(t) {
