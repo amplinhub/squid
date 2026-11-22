@@ -228,6 +228,7 @@ export function createWorld(scene, atmo) {
   return {
     stats, view, setView, hooks,
     chunks: () => list,
+    chunkAt: (px, py) => chunks.get(Math.floor(px / CS) + "," + Math.floor(py / CS)) || null,
     // a rock, coral, urchin, kelp stem or skeleton at this point of the seabed? (crabs walk round them)
     blockedAt(px, py, size) {
       const c = chunks.get(Math.floor(px / CS) + "," + Math.floor(py / CS));

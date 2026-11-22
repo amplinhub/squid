@@ -13,6 +13,7 @@ import { createPlayer, stageName } from './player/player.js';
 import { createCreatures, buildModelsStep } from './creatures/creatures.js';
 import { createFx } from './fx/fx.js';
 import { initMessages, msg, msgStep, msgClear } from './ui/messages.js';
+import { isUnlocked, setChar, chosenChar } from './core/progress.js';
 
 const $ = (id) => document.getElementById(id);
 const setLoad = (k, key) => { $('load-fill').style.width = Math.round(k * 100) + '%'; if (key) $('load-text').textContent = t(key); };
@@ -33,23 +34,28 @@ let stepN = 0;
 const spawnPoint = findSpawn();
 // systems refer to each other through small context objects
 const ctx = { frame: () => stepN, msg, creatures: null, fx: null, onDeath: null };
-const player = createPlayer(scene, spawnPoint, ctx);
+const player = createPlayer(scene, spawnPoint, ctx, world);
 const pl = player.pl;
 const creatures = createCreatures(scene, world, atmo, {
   view: world.view,
-  player: () => ({ x: pl.x, y: pl.y, z: pl.z, vx: pl.vx, vy: pl.vy, vz: pl.vz, L: pl.L, tv: pl.tv, alive: pl.alive, vis: pl.vis, hidden: pl.hidden }),
+  player: () => ({ x: pl.x, y: pl.y, z: pl.z, vx: pl.vx, vy: pl.vy, vz: pl.vz, L: pl.L, tv: pl.tv, alive: pl.alive, vis: pl.vis, hidden: pl.hidden, char: pl.char }),
+  inInk: (x, y, z, m) => fx.inInk(x, y, z, m), inkCount: () => fx.inkCount(),
 });
 const fx = createFx(scene, {
   view: world.view, chunks: () => world.chunks(), gfx: () => quality().gfx, cap: () => quality().particles,
   player: () => ({ x: pl.x, y: pl.y, z: pl.z, yaw: pl.yaw, pitch: pl.pitch, spd: pl.spd, boost: pl.boost, L: pl.L, alive: pl.alive }),
 });
 ctx.creatures = creatures; ctx.fx = fx;
+// the creature chosen last time (if it is open)
+if (chosenChar() !== 0) player.reset(spawnPoint, chosenChar());
 
 // what creatures do to the player and to each other
 const R = Math.random, rr = (a, b) => a + R() * (b - a);
 creatures.hooks.bite = (c, dmg) => player.hurt(dmg, c);
 creatures.hooks.threat = (c) => { msg(t(c.sp.fem ? 'threat_f' : 'threat_m', { n: spName(c.sp) }), [255, 120, 100]); threatFlash = 1; };
 creatures.hooks.lost = (c) => msg(t(c.sp.fem ? 'lost_f' : 'lost_m', { n: spName(c.sp) }), [150, 230, 190]);
+creatures.hooks.blind = (c) => msg(t(c.sp.fem ? 'blind_f' : 'blind_m', { n: spName(c.sp) }), [190, 170, 255]);
+creatures.hooks.bored = (c) => msg(t(c.sp.fem ? 'bored_f' : 'bored_m', { n: spName(c.sp) }), [230, 220, 190]);
 creatures.hooks.eaten = (prey) => fx.remains(prey.sp.kind, prey.x, prey.y, prey.z, prey.len, prey.yaw);
 creatures.hooks.ink = (c) => fx.cloud(c.x, c.y, c.z, c.len * 1.2, 1, 6);
 creatures.hooks.bubbles = (c) => {
@@ -79,10 +85,33 @@ function setPaused(p) {
   paused = p;
   $('pause').hidden = !p;
   $('sel-quality').value = qualityMode();
+  if (p) fillChars();
 }
 $('btn-pause').addEventListener('click', () => setPaused(true));
 $('btn-resume').addEventListener('click', () => setPaused(false));
 $('sel-quality').addEventListener('change', (e) => setQualityMode(e.target.value));
+
+// creature choice (temporary, in the pause menu until the title menu of stage 6); a new choice starts a
+// new life as that creature
+const selChar = $('sel-char');
+function fillChars() {
+  selChar.innerHTML = '';
+  for (let c = 0; c < 3; c++) {
+    const o = document.createElement('option');
+    o.value = c; o.disabled = !isUnlocked(c);
+    o.textContent = t('ch' + c) + (isUnlocked(c) ? '' : ` (${t('locked')})`);
+    selChar.appendChild(o);
+  }
+  selChar.value = pl.char;
+}
+selChar.addEventListener('change', () => { const c = +selChar.value; setChar(c); setPaused(false); newLife(c); });
+// the Ability button: the nautilus hides in its shell, the octopus squirts ink, the squid has none
+function syncAbility() {
+  const b = $('btn-ability');
+  b.style.visibility = pl.char === 0 ? 'hidden' : 'visible';
+  if (pl.char) b.textContent = t('abil' + pl.char);
+}
+langBtn.addEventListener('click', () => { fillChars(); syncAbility(); });
 // leaving the tab or minimising the browser pauses the game
 document.addEventListener('visibilitychange', () => { if (document.hidden) setPaused(true); });
 // F3 shows / hides the technical line
@@ -159,15 +188,16 @@ function showDeath() {
     `<div class="big"><span>${t('dead_score')}</span><b>${pl.score}</b></div>`;
   $('dead').hidden = false;
 }
-function newLife() {
+function newLife(ch = pl.char) {
   $('dead').hidden = true;
   creatures.clear(); fx.clear(); msgClear();
-  player.reset(spawnPoint);
+  player.reset(spawnPoint, ch);
+  syncAbility();
   cam.init = false; cam.yaw = pl.yaw * D;
   creatures.startSpawn();
   for (const c of world.chunks()) if (c.stage > 0) { c.seen = false; }
 }
-$('btn-again').addEventListener('click', newLife);
+$('btn-again').addEventListener('click', () => newLife());
 
 // ---------- loading: models, then the world around the spawn ----------
 async function load() {
@@ -242,6 +272,7 @@ function frame(a, dt) {
 window.__gu = { scene, player, world, atmo, camera, renderer, cam, creatures, fx, simStep, frame };
 
 load().then(() => {
+  syncAbility(); cam.yaw = pl.yaw * D;
   startLoop(simStep, frame);
   $('hud').hidden = false;
   $('loading').classList.add('fade');

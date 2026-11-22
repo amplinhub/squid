@@ -152,6 +152,7 @@ export function createCreatures(scene, world, atmo, env) {
       wyaw: 0, wt: irandom(120), grabbed: false, prey: null, dyaw: 0, huntT: irandom(50),
       lvx: 0, lvy: 0, lvz: 0, blindT: 0, lostc: 0, chaseT: 0, inflate: 0, inked: false, swal: 0,
       bubT: irandom(150), bubN: 0, scared: false, crT: 0, crAv: 1, crAvt: 0, dead: false, mesh: null, rig: null,
+      shellN: 0, shellLim: 1 + irandom(1),        // bites on a closed nautilus shell before the predator gives up
     };
     c.leader = leader || c;
     c.wyaw = c.yaw;
@@ -261,6 +262,12 @@ export function createCreatures(scene, world, atmo, env) {
     let zhi = Math.min(c.bed + s.zmax, SURF_Z - 40 - c.len * 0.2, SURF_Z - s.dlw * 5);
     if (zhi < zlo + 10) zhi = zlo + 10;
     if (c.blindT > 0) c.blindT--;
+    // ink: a creature that swims into a cloud loses sight of the player for a while
+    if (env.inkCount?.() > 0 && (frame + c.id) % 4 === 0 && env.inInk(c.x, c.y, c.z, c.len * 0.3)) {
+      if (s.pred && c.blindT <= 0 && (c.state === 2 || c.state === 3)) hooks.blind?.(c);
+      c.blindT = 300;
+      if (c.state === 2 || c.state === 3) { c.state = 5; c.timer = 0; }
+    }
     let tyaw = c.yaw, tpitch = 0;
     c.mtarget = 0;
     let fr = 110 + c.len * 2 + pl.L * 1.3;
@@ -295,6 +302,8 @@ export function createCreatures(scene, world, atmo, env) {
           if (--c.wt <= 0) {
             c.wt = 90 + irandom(170); c.wyaw = c.yaw + range(-75, 75);
             if (s.kind === 9) { c.wt = 300 + irandom(300); c.wyaw = c.yaw + range(-30, 30); }
+            // some creatures wander towards the octopus lurking on the bottom (that is how it hunts)
+            if (c.lure && pl.char === 2 && pl.alive && d < 1400 && !danger) c.wyaw = pdir(c.x, c.y, pl.x, pl.y) + range(-30, 30);
           }
           tyaw = c.wyaw;
           tpitch = c.z < zlo ? 22 : c.z > zhi ? -22 : Math.sin(time * 0.35 + c.id) * 9;
@@ -334,7 +343,15 @@ export function createCreatures(scene, world, atmo, env) {
         tpitch = clamp(tpitch, -c.chasePitch, c.chasePitch);
         const br = c.len * 0.42 + pl.L * 0.4;
         if (d < br * 3.2) c.mtarget = 1;
-        if (d < br && c.biteCd <= 0) { hooks.bite?.(c, s.dmg); c.biteCd = 70; c.state = 3; c.timer = 0; }
+        if (d < br && c.biteCd <= 0) {
+          hooks.bite?.(c, s.dmg); c.biteCd = 70; c.state = 3; c.timer = 0;
+          if (c.shellN >= c.shellLim) {
+            // the shell cannot be bitten through: the predator loses interest and swims off for a while
+            c.shellN = 0; c.state = 5; c.blindT = 330;
+            c.wyaw = pdir(pl.x, pl.y, c.x, c.y); c.wt = 240;
+            hooks.bored?.(c);
+          }
+        }
         break;
       }
       case 3:

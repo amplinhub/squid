@@ -14,6 +14,8 @@ export function squidPalette(p) {
   switch (p) {
     case 0: return { body: rgb(232, 98, 70), belly: rgb(252, 204, 178), spot: rgb(150, 40, 42), arm: rgb(206, 96, 74), under: rgb(248, 206, 188), fin: rgb(226, 120, 96), eye: rgb(242, 206, 84) };
     case 1: return { body: rgb(252, 196, 178), belly: rgb(255, 236, 222), spot: rgb(240, 146, 124), arm: rgb(250, 186, 166), under: rgb(255, 236, 226), fin: rgb(255, 206, 186), eye: rgb(242, 206, 84) };
+    // 4: player octopus - bright red, white dots
+    case 4: return { body: rgb(204, 34, 36), belly: rgb(240, 120, 104), spot: rgb(250, 238, 230), arm: rgb(210, 40, 40), under: rgb(252, 210, 196), fin: rgb(204, 34, 36), eye: rgb(250, 214, 110) };
     case 3: return { body: rgb(176, 84, 58), belly: rgb(226, 156, 124), spot: rgb(120, 50, 36), arm: rgb(184, 92, 66), under: rgb(244, 204, 182), fin: rgb(184, 92, 66), eye: rgb(232, 204, 120) };
     default: return { body: rgb(140, 28, 46), belly: rgb(196, 110, 112), spot: rgb(84, 10, 24), arm: rgb(150, 36, 52), under: rgb(222, 150, 150), fin: rgb(166, 44, 62), eye: rgb(205, 236, 140) };
   }
@@ -32,7 +34,10 @@ function sqR(s) {
 
 function buildParts(p) {
   const c = squidPalette(p);
-  const K = 8, NS = 9, out = {};
+  const out = {};
+  let K = 8, NS = 9;
+  if (p === 4) { K = 12; NS = 14; }
+  const hs = (a, bb) => { const v = Math.sin(a * 12.9898 + bb * 78.233) * 43758.5453; return v - Math.floor(v); };   // seed-free hash (hash_s)
   // mantle
   let b = new MeshBuilder(makeRng(500 + p), 256);
   for (let i = 0; i < NS; i++) {
@@ -45,12 +50,31 @@ function buildParts(p) {
       const h = hash2(i * 11 + k, p * 7 + 3);
       if (h < 0.2 && zr > -0.3) col = c.spot;
       if (p === 3 && h > 0.75) col = merge(col, c.belly, 0.4);
+      if (p === 4) { col = merge(c.belly, c.body, smoothstep(-0.45, 0.35, zr)); if (hs(i * 3 + 1, k * 5 + 2) < 0.16 && zr > -0.4) col = c.spot; }
       if (i === 0) col = merge(col, c.belly, 0.35);
       b.quad(-s0, Math.sin(th0) * r0, Math.cos(th0) * r0 * 0.92, -s0, Math.sin(th1) * r0, Math.cos(th1) * r0 * 0.92,
              -s1, Math.sin(th1) * r1, Math.cos(th1) * r1 * 0.92, -s1, Math.sin(th0) * r1, Math.cos(th0) * r1 * 0.92, col);
     }
   }
   out.mantle = b.geometry();
+  if (p === 4) {
+    // camouflage patches of the player octopus: irregular blobs of mantle faces a hair above the skin,
+    // tinted to the ground colour while it hides (the skin between them keeps its own colour)
+    b = new MeshBuilder(makeRng(520), 256);
+    for (let i = 0; i < NS; i++) {
+      let s0 = i / NS, s1 = (i + 1) / NS;
+      const r0 = octR(s0) * 1.03, r1 = octR(s1) * 1.03; s0 *= 0.75; s1 *= 0.75;
+      b.ref(-(s0 + s1) / 2, 0, 0);
+      for (let k = 0; k < K; k++) {
+        if (Math.abs(Math.sin(i * 1.7 + 0.4) * Math.cos(k * 1.3 + 1.1)) + 0.35 * Math.abs(Math.sin(i * 0.6 + k * 0.9)) < 0.55) continue;
+        const th0 = k * 2 * Math.PI / K, th1 = (k + 1) * 2 * Math.PI / K;
+        const col = (i + k) % 2 ? rgb(190, 190, 190) : rgb(255, 255, 255);
+        b.quad(-s0, Math.sin(th0) * r0, Math.cos(th0) * r0 * 0.92, -s0, Math.sin(th1) * r0, Math.cos(th1) * r0 * 0.92,
+               -s1, Math.sin(th1) * r1, Math.cos(th1) * r1 * 0.92, -s1, Math.sin(th0) * r1, Math.cos(th0) * r1 * 0.92, col);
+      }
+    }
+    out.patch = b.geometry();
+  }
   // head: short neck, big golden eyes, dark beak in the arm crown
   b = new MeshBuilder(makeRng(510 + p), 256);
   for (let i = 0; i < 2; i++) {
@@ -94,6 +118,14 @@ function buildParts(p) {
     const col = zr < -0.5 ? c.under : merge(c.arm, c.body, zr > 0.5 ? 0.3 : 0);
     b.quad(0, Math.sin(th0), Math.cos(th0), 0, Math.sin(th1), Math.cos(th1), 1.08, Math.sin(th1) * 0.8, Math.cos(th1) * 0.8, 1.08, Math.sin(th0) * 0.8, Math.cos(th0) * 0.8, col);
   }
+  if (p === 4) {
+    // white dots along the arm (the segment is stretched ~3x along x when drawn, so they are flat in x)
+    b.jit = 0;
+    for (let k = 0; k < 3; k++) {
+      const th0 = -0.9 + k * 0.9, xa = 0.25 + (k % 2) * 0.45, ra = lerp(1, 0.8, xa);
+      b.blob(xa, Math.sin(th0) * ra * 0.98, Math.cos(th0) * ra * 0.98, 0.07, 0.2, 0.2, 2, 5, 0, rgb(252, 246, 240), null);
+    }
+  }
   out.seg = b.geometry();
   // tentacle club
   b = new MeshBuilder(makeRng(800 + p), 32);
@@ -104,7 +136,8 @@ function buildParts(p) {
 }
 
 const partsCache = {};
-const parts = (p) => (partsCache[p] ??= buildParts(p));
+export const parts = (p) => (partsCache[p] ??= buildParts(p));
+export { P as AXIS_SWAP };
 const MAT = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide });
 
 // ---- small vector helpers on plain arrays (game space)

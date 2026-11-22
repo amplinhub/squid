@@ -15,6 +15,10 @@ const DICT = {
     hp: 'Здоровье', stamina: 'Выносливость', food: 'Сытость', score: 'Очки', size_m: 'м',
     dead_title: 'Кальмар погиб', dead_by_m: 'Кальмара съел {k}', dead_by_f: 'Кальмара съела {k}', dead_starved: 'Причина: голод', dead_size: 'Размер', dead_eaten: 'Съедено',
     dead_score: 'Очки', dead_time: 'Время', again: 'Ещё раз', combo: 'Комбо ×{k}',
+    shell_held: 'Раковина выдержала укус!', ink_not_ready: 'Чернила ещё не накопились',
+    blind_m: '{n} ослеп в чернилах!', blind_f: '{n} ослепла в чернилах!', bored_m: '{n} потерял интерес — уплывайте!', bored_f: '{n} потеряла интерес — уплывайте!',
+    ch0: 'Кальмар', ch1: 'Наутилус', ch2: 'Осьминог', creature: 'Существо', locked: 'закрыто', abil1: 'Раковина', abil2: 'Чернила',
+    unlocked: 'Открыт новый персонаж: {n}!',
   },
   en: {
     loading: 'Loading…', load_scene: 'Seabed', load_creatures: 'Sea creatures', load_done: 'Ready',
@@ -30,6 +34,10 @@ const DICT = {
     hp: 'Health', stamina: 'Stamina', food: 'Fullness', score: 'Score', size_m: 'm',
     dead_title: 'Your squid died', dead_by_m: 'Eaten by: {k}', dead_by_f: 'Eaten by: {k}', dead_starved: 'Cause: starvation', dead_size: 'Size', dead_eaten: 'Eaten',
     dead_score: 'Score', dead_time: 'Time', again: 'Play again', combo: 'Combo ×{k}',
+    shell_held: 'The shell held the bite!', ink_not_ready: 'Ink is not ready yet',
+    blind_m: '{n} is blinded by the ink!', blind_f: '{n} is blinded by the ink!', bored_m: '{n} lost interest — swim away!', bored_f: '{n} lost interest — swim away!',
+    ch0: 'Squid', ch1: 'Nautilus', ch2: 'Octopus', creature: 'Creature', locked: 'locked', abil1: 'Shell', abil2: 'Ink',
+    unlocked: 'New creature unlocked: {n}!',
   },
 };
 
