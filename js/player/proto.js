@@ -84,5 +84,6 @@ export function createProtoSquid(scene) {
     },
     renderPos(a, out) { return out.lerpVectors(prevPos, pos, a); },
     renderYaw(a) { return prevYaw + (yaw - prevYaw) * a; },
+    renderPitch(a) { return prevPitch + (pitch - prevPitch) * a; },
   };
 }
