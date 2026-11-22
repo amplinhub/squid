@@ -5,7 +5,8 @@ import * as THREE from 'three';
 import { floorHeight } from '../world/testScene.js';
 
 const TURN = 2.2;          // rad/s
-const PITCH_SPEED = 9;     // m/s vertical
+const PITCH_RATE = 1.4;    // rad/s nose up / down
+const PITCH_MAX = 1.25;    // ~72 degrees, never straight up or down
 const SWIM = 14, BOOST = 30, BACK = 5;
 
 function buildBody() {
@@ -45,25 +46,27 @@ export function createProtoSquid(scene) {
   const { root, tentacles } = buildBody();
   scene.add(root);
   const pos = new THREE.Vector3(0, -40, 30), prevPos = pos.clone();
-  let yaw = Math.PI, prevYaw = yaw, speed = 0, vy = 0, tilt = 0, boostT = 0, phase = 0;
+  // direction = yaw (around the vertical) + pitch (nose up / down). The stick only turns the squid;
+  // it moves, wherever the nose points, only while Swim or Dash is pressed.
+  let yaw = Math.PI, prevYaw = yaw, pitch = 0, prevPitch = 0, speed = 0, tilt = 0, boostT = 0, phase = 0;
+  const dir = new THREE.Vector3();
 
   return {
-    pos, get yaw() { return yaw; }, get speed() { return speed; },
+    pos, get yaw() { return yaw; }, get pitch() { return pitch; }, get speed() { return speed; },
     step(dt, inp) {
-      prevPos.copy(pos); prevYaw = yaw;
+      prevPos.copy(pos); prevYaw = yaw; prevPitch = pitch;
       yaw += inp.turn * TURN * dt;
+      pitch = THREE.MathUtils.clamp(pitch + inp.pitch * PITCH_RATE * dt, -PITCH_MAX, PITCH_MAX);
       if (inp.boostHit && boostT <= 0) boostT = 0.6;
       boostT -= dt;
       const target = boostT > 0 ? BOOST : inp.swim ? SWIM : inp.back ? -BACK : 0;
       speed += (target - speed) * Math.min(1, dt * (boostT > 0 ? 6 : 1.6));
-      vy += (inp.pitch * PITCH_SPEED - vy) * Math.min(1, dt * 3);
       tilt += (inp.turn * 0.45 - tilt) * Math.min(1, dt * 4);
-      pos.x += Math.sin(yaw) * speed * dt;          // yaw 0 = +Z, model is turned to face it
-      pos.z += Math.cos(yaw) * speed * dt;
-      pos.y += vy * dt;
+      dir.set(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch));
+      pos.addScaledVector(dir, speed * dt);
       const floor = floorHeight(pos.x, pos.z) + 1.5;
-      if (pos.y < floor) { pos.y = floor; vy = Math.max(vy, 0); }
-      if (pos.y > -2) { pos.y = -2; vy = Math.min(vy, 0); }
+      if (pos.y < floor) pos.y = floor;              // slides along the bottom instead of sinking in
+      if (pos.y > -2) pos.y = -2;
       const lim = 110;                                // stay on the test patch
       pos.x = THREE.MathUtils.clamp(pos.x, -lim, lim);
       pos.z = THREE.MathUtils.clamp(pos.z, -lim, lim);
@@ -72,7 +75,8 @@ export function createProtoSquid(scene) {
     // a: interpolation factor between the previous and the current simulation step
     render(a) {
       root.position.lerpVectors(prevPos, pos, a);
-      root.rotation.set(-vy * 0.05, prevYaw + (yaw - prevYaw) * a + Math.PI, -tilt, 'YXZ');
+      // the nose (mantle tip) looks along -Z: turn the model round, then raise / lower the nose
+      root.rotation.set(prevPitch + (pitch - prevPitch) * a, prevYaw + (yaw - prevYaw) * a + Math.PI, -tilt, 'YXZ');
       for (const t of tentacles) {
         const w = Math.sin(phase - t.userData.a * 0.5) * 0.25;
         t.rotation.set(Math.sin(t.userData.a) * (0.18 + w), Math.cos(t.userData.a) * (0.18 + w), 0);

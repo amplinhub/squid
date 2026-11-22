@@ -60,10 +60,11 @@ function updateCamera(a, dt) {
   const yaw = squid.renderYaw(a);
   camYaw += (yaw - camYaw) * Math.min(1, dt * 4);
   const back = 13, up = 4.5;
-  tmp.set(sq.x - Math.sin(camYaw) * back, sq.y + up, sq.z - Math.cos(camYaw) * back);
+  const sp = Math.sin(squid.renderPitch(a));          // camera follows the nose up / down a little
+  tmp.set(sq.x - Math.sin(camYaw) * back, sq.y + up - sp * back * 0.55, sq.z - Math.cos(camYaw) * back);
   if (!camInit) { camPos.copy(tmp); camInit = true; } else camPos.lerp(tmp, Math.min(1, dt * 6));
   camera.position.copy(camPos);
-  camLook.set(sq.x + Math.sin(camYaw) * 6, sq.y + 1, sq.z + Math.cos(camYaw) * 6);
+  camLook.set(sq.x + Math.sin(camYaw) * 6, sq.y + 1 + sp * 6, sq.z + Math.cos(camYaw) * 6);
   camera.lookAt(camLook);
   // water darkens with depth, like in the original
   const k = THREE.MathUtils.clamp(-sq.y / 70, 0, 1);
