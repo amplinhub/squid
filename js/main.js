@@ -16,7 +16,9 @@ import { initMessages, msg, msgStep, msgClear } from './ui/messages.js';
 
 const $ = (id) => document.getElementById(id);
 const setLoad = (k, key) => { $('load-fill').style.width = Math.round(k * 100) + '%'; if (key) $('load-text').textContent = t(key); };
-const nextFrame = () => new Promise((r) => requestAnimationFrame(r));
+// yields to the browser so the loading bar repaints; a timer, not a frame, so loading also finishes in a
+// background tab
+const nextFrame = () => new Promise((r) => setTimeout(r, 0));
 const D = Math.PI / 180;
 
 applyLang();
@@ -237,7 +239,7 @@ function frame(a, dt) {
 }
 
 // handle for automated checks in the browser console (no effect on the game)
-window.__gu = { player, world, atmo, camera, renderer, cam, creatures, fx };
+window.__gu = { player, world, atmo, camera, renderer, cam, creatures, fx, simStep, frame };
 
 load().then(() => {
   startLoop(simStep, frame);
