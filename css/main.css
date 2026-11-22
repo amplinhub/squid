@@ -1,0 +1,114 @@
+/* GROW UP - interface layer over the WebGL canvas.
+   Sizes are relative (clamp / vmin) so the same layout works on a phone in either orientation and on a
+   desktop; safe-area insets keep controls clear of notches and gesture bars. */
+:root {
+  --sea-0: #03121c;
+  --sea-1: #0a3346;
+  --glass: rgba(6, 26, 38, 0.78);
+  --brass: #b0803a;
+  --brass-hi: #ffe496;
+  --text: #e2efec;
+  --accent: #ffd27a;
+  --u: clamp(10px, 1.6vmin + 4px, 18px);          /* base unit of the interface */
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
+  font-family: "Segoe UI", Roboto, system-ui, sans-serif;
+  color: var(--text);
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body {
+  margin: 0; height: 100%; overflow: hidden; background: var(--sea-0);
+  touch-action: none; user-select: none; -webkit-user-select: none; overscroll-behavior: none;
+}
+#game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+[hidden] { display: none !important; }
+
+/* ---------- generic panels and buttons ---------- */
+.panel {
+  background: var(--glass);
+  border: 2px solid var(--brass);
+  border-radius: calc(var(--u) * 0.7);
+  box-shadow: inset 0 0 0 1px rgba(255, 228, 150, 0.25), 0 calc(var(--u) * 0.3) calc(var(--u) * 1.2) rgba(0, 0, 0, 0.45);
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+.icon-btn {
+  width: calc(var(--u) * 2.8); height: calc(var(--u) * 2.8);
+  border-radius: 50%; border: 2px solid var(--brass);
+  background: var(--glass); font-weight: 700; font-size: calc(var(--u) * 0.95);
+}
+.icon-btn:active { transform: scale(0.94); }
+
+/* ---------- screens ---------- */
+.screen { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 20; }
+.screen.dim { background: rgba(2, 10, 18, 0.55); }
+#loading { background: radial-gradient(ellipse at 50% 30%, var(--sea-1), var(--sea-0) 70%); transition: opacity 0.5s; }
+#loading.fade { opacity: 0; pointer-events: none; }
+.load-box { width: min(70vw, 520px); text-align: center; }
+.load-bar { height: calc(var(--u) * 1.1); border: 2px solid var(--brass); border-radius: 999px; padding: 2px; background: var(--sea-0); }
+#load-fill { height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, #28c8d2, #8cfaf0); transition: width 0.2s; }
+#load-text { margin-top: calc(var(--u) * 0.9); font-size: calc(var(--u) * 1.05); opacity: 0.85; }
+
+.menu { padding: calc(var(--u) * 1.6) calc(var(--u) * 2.2); min-width: min(80vw, 420px); text-align: center; }
+.menu h1 { margin: 0 0 calc(var(--u) * 1.2); color: var(--accent); font-size: calc(var(--u) * 2); letter-spacing: 0.06em; }
+.menu-btn {
+  display: block; width: 100%; margin: calc(var(--u) * 0.5) 0; padding: calc(var(--u) * 0.75);
+  border: 2px solid var(--brass); border-radius: calc(var(--u) * 0.6);
+  background: linear-gradient(#f0e2ba, #c8ac74); color: #40240e; font-weight: 700; font-size: calc(var(--u) * 1.1);
+}
+.menu-btn:active { transform: scale(0.97); }
+.row { display: flex; align-items: center; justify-content: space-between; gap: var(--u); margin-top: var(--u); font-size: calc(var(--u) * 1); }
+select { font: inherit; color: var(--text); background: var(--sea-0); border: 1px solid var(--brass); border-radius: 6px; padding: 4px 8px; }
+
+/* ---------- HUD ---------- */
+#hud { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+#hud button, #hud select { pointer-events: auto; }
+#debug {
+  position: absolute; left: calc(var(--safe-l) + var(--u)); top: calc(var(--safe-t) + var(--u));
+  padding: calc(var(--u) * 0.45) calc(var(--u) * 0.8); font: calc(var(--u) * 0.8)/1.35 ui-monospace, Consolas, monospace;
+  white-space: pre;
+}
+.top-right { position: absolute; right: calc(var(--safe-r) + var(--u)); top: calc(var(--safe-t) + var(--u)); display: flex; gap: calc(var(--u) * 0.6); }
+.hint {
+  position: absolute; left: 50%; bottom: calc(var(--safe-b) + var(--u)); transform: translateX(-50%);
+  font-size: calc(var(--u) * 0.85); opacity: 0.75; text-align: center; white-space: nowrap;
+  text-shadow: 0 1px 3px #000;
+}
+
+/* ---------- touch controls ---------- */
+#touch { position: fixed; inset: 0; z-index: 12; pointer-events: none; }
+#stick-zone { position: absolute; left: 0; top: 0; bottom: 0; width: 50%; pointer-events: auto; }
+#stick-base {
+  position: absolute; width: calc(var(--u) * 8); height: calc(var(--u) * 8); margin: calc(var(--u) * -4) 0 0 calc(var(--u) * -4);
+  border-radius: 50%; border: 2px solid rgba(255, 228, 150, 0.55); background: rgba(6, 26, 38, 0.35);
+  left: calc(var(--safe-l) + var(--u) * 6.5); top: calc(100% - var(--safe-b) - var(--u) * 6.5);
+  transition: opacity 0.2s; opacity: 0.55;
+}
+#stick-base.active { opacity: 1; transition: none; }
+#stick-knob {
+  position: absolute; left: 50%; top: 50%; width: 42%; height: 42%; margin: -21% 0 0 -21%;
+  border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff6d0, #b0803a 75%);
+}
+#touch-buttons {
+  position: absolute; right: calc(var(--safe-r) + var(--u) * 1.2); bottom: calc(var(--safe-b) + var(--u) * 1.2);
+  display: grid; grid-template-columns: auto auto; grid-template-rows: auto auto; gap: calc(var(--u) * 0.8);
+  align-items: end; justify-items: center; pointer-events: auto;
+}
+.tbtn {
+  width: calc(var(--u) * 5); height: calc(var(--u) * 5); border-radius: 50%;
+  border: 2px solid var(--brass); background: var(--glass); font-weight: 700; font-size: calc(var(--u) * 0.85);
+  touch-action: none;
+}
+.tbtn.big { width: calc(var(--u) * 6.4); height: calc(var(--u) * 6.4); font-size: calc(var(--u) * 1); grid-column: 2; grid-row: 2; }
+.tbtn.small { width: calc(var(--u) * 4.2); height: calc(var(--u) * 4.2); font-size: calc(var(--u) * 0.7); grid-column: 2; grid-row: 1; }
+#btn-boost { grid-column: 1; grid-row: 2; }
+.tbtn.on { background: rgba(255, 210, 122, 0.35); border-color: var(--brass-hi); }
+
+/* portrait: buttons stack lower and smaller, stick sits a bit higher above the gesture bar */
+@media (orientation: portrait) {
+  #touch-buttons { bottom: calc(var(--safe-b) + var(--u) * 2.2); }
+  #stick-base { top: calc(100% - var(--safe-b) - var(--u) * 7.5); }
+  .hint { white-space: normal; width: 90vw; }
+}

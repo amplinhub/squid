@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#061a26">
+<title>GROW UP</title>
+<link rel="stylesheet" href="css/main.css">
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js" } }
+</script>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<!-- loading screen -->
+<div id="loading" class="screen">
+  <div class="load-box">
+    <div class="load-bar"><div id="load-fill"></div></div>
+    <div id="load-text" data-i18n="loading">Загрузка…</div>
+  </div>
+</div>
+
+<!-- HUD (stage 0: only a debug line and buttons) -->
+<div id="hud" hidden>
+  <div id="debug" class="panel"></div>
+  <div class="top-right">
+    <button id="btn-lang" class="icon-btn" aria-label="language">RU</button>
+    <button id="btn-pause" class="icon-btn" aria-label="pause">II</button>
+  </div>
+  <div id="hint" class="hint" data-i18n="hint_keys"></div>
+</div>
+
+<!-- touch controls: shown only on touch devices -->
+<div id="touch" hidden>
+  <div id="stick-zone"><div id="stick-base"><div id="stick-knob"></div></div></div>
+  <div id="touch-buttons">
+    <button id="btn-ability" class="tbtn small" data-i18n="btn_ability">Способность</button>
+    <button id="btn-boost" class="tbtn" data-i18n="btn_boost">Рывок</button>
+    <button id="btn-swim" class="tbtn big" data-i18n="btn_swim">Плыть</button>
+  </div>
+</div>
+
+<!-- pause -->
+<div id="pause" class="screen dim" hidden>
+  <div class="panel menu">
+    <h1 data-i18n="paused">Пауза</h1>
+    <button id="btn-resume" class="menu-btn" data-i18n="resume">Продолжить</button>
+    <div class="row">
+      <span data-i18n="quality">Качество</span>
+      <select id="sel-quality">
+        <option value="auto" data-i18n="q_auto">Авто</option>
+        <option value="0" data-i18n="q_low">Низкое</option>
+        <option value="1" data-i18n="q_mid">Среднее</option>
+        <option value="2" data-i18n="q_high">Высокое</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
