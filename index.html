@@ -47,15 +47,23 @@
 
 <div id="hurt"></div>
 <div id="hud" hidden>
-  <!-- temporary status panel (the full HUD comes with stage 7) -->
-  <div id="status" class="panel">
-    <div id="stat-size" class="st-title"></div>
-    <div class="bar"><div id="bar-hp" class="fill hp"></div></div>
-    <div class="bar"><div id="bar-st" class="fill st"></div></div>
-    <div class="bar"><div id="bar-food" class="fill food"></div></div>
-    <div class="st-row"><span id="stat-score"></span><span id="stat-depth"></span></div>
+  <!-- framed panel: size class, length, health, stamina bubbles, hunger, ability -->
+  <div id="panel">
+    <div class="h-title"><span id="h-stage"></span><span id="h-len"></span></div>
+    <div class="h-row"><i class="ico ico-heart"></i><div class="hbar"><div id="h-hp" class="hfill hp"></div><span id="h-hpn"></span></div></div>
+    <div class="h-row"><i class="ico ico-bub"></i><div id="h-st" class="bubbles"></div></div>
+    <div class="h-row"><i class="ico-fish"></i><div id="h-foodbar" class="hbar"><div id="h-food" class="hfill food"></div><span class="hlabel" data-i18n="hunger">голод</span></div></div>
+    <div id="h-abil" class="h-row" hidden><i class="ico-abil"></i><div class="hbar"><div id="h-ink" class="hfill ink"></div><span id="h-abiltxt" class="hlabel"></span><i class="mark m1"></i><i class="mark m2"></i></div></div>
   </div>
-  <div id="debug"></div>
+  <!-- depth gauge -->
+  <div id="depth"><img src="assets/ui/dial.png" alt=""><div id="needle"></div><div id="depth-lbl"></div></div>
+  <!-- missions -->
+  <div id="missions"><div id="ms-head"></div><div id="ms-list"></div><div id="ms-note"></div></div>
+  <!-- sonar -->
+  <div id="sonar"><canvas id="sonar-c"></canvas><img src="assets/ui/porthole.png" alt=""><div id="sonar-lbl"></div></div>
+  <div id="danger" hidden><div id="danger-1" data-i18n="danger">ОПАСНОСТЬ!</div><div id="danger-2"></div><div id="danger-3"></div></div>
+  <div id="hide-note"></div>
+  <div id="debug" hidden></div>
   <div id="hint" class="hint" data-i18n="hint_keys"></div>
 </div>
 <div id="msgs"></div>
@@ -84,20 +92,54 @@
   </div>
 </div>
 
-<!-- pause / settings -->
+<!-- pause -->
 <div id="pause" class="screen dim" hidden>
   <div class="panel menu">
-    <h1 id="pause-title" data-i18n="paused">Пауза</h1>
+    <h1 data-i18n="paused">Пауза</h1>
     <button id="btn-resume" class="menu-btn" data-i18n="resume">Продолжить</button>
+    <button id="btn-bestiary" class="menu-btn" data-i18n="bestiary">Бестиарий</button>
+    <button id="btn-settings" class="menu-btn" data-i18n="menu_settings">Настройки</button>
     <button id="btn-mainmenu" class="menu-btn" data-i18n="main_menu">Главное меню</button>
-    <div class="row">
-      <span data-i18n="quality">Качество</span>
+    <div class="menu-tip" data-i18n="pause_tip"></div>
+  </div>
+</div>
+
+<!-- settings -->
+<div id="settings" class="screen dim" hidden>
+  <div class="panel menu wide">
+    <h1 data-i18n="menu_settings">Настройки</h1>
+    <div class="set-row"><span data-i18n="gfx">Графика</span>
       <select id="sel-quality">
         <option value="auto" data-i18n="q_auto">Авто</option>
         <option value="0" data-i18n="q_low">Низкое</option>
         <option value="1" data-i18n="q_mid">Среднее</option>
         <option value="2" data-i18n="q_high">Высокое</option>
-      </select>
+      </select></div>
+    <div class="set-note" id="gfx-note"></div>
+    <div class="set-row"><span data-i18n="vol_sfx">Звуки</span><input id="vol-sfx" type="range" min="0" max="1" step="0.1"></div>
+    <div class="set-row"><span data-i18n="vol_amb">Шум моря</span><input id="vol-amb" type="range" min="0" max="1" step="0.1"></div>
+    <div class="set-row"><span data-i18n="vol_music">Музыка</span><input id="vol-music" type="range" min="0" max="1" step="0.1"></div>
+    <div class="set-row"><span data-i18n="fullscreen">Полный экран</span><input id="set-full" type="checkbox"></div>
+    <div class="set-row"><span data-i18n="invert">Инверсия вертикали</span><input id="set-inv" type="checkbox"></div>
+    <div class="set-note" id="inv-note"></div>
+    <div class="set-row"><span data-i18n="language">Язык</span>
+      <select id="sel-lang"><option value="ru">Русский</option><option value="en">English</option></select></div>
+    <button id="btn-set-back" class="menu-btn" data-i18n="back">Назад</button>
+  </div>
+</div>
+
+<!-- bestiary (under the transparent WebGL canvas: the models are drawn into the card windows) -->
+<div id="bestiary" hidden>
+  <div class="bst-head">
+    <button id="bst-close" class="menu-btn small" data-i18n="back">Назад</button>
+    <div><div id="bst-title"></div><div id="bst-sub"></div></div>
+  </div>
+  <div id="bst-grid"></div>
+  <div id="bst-detail" hidden>
+    <div class="panel bst-card">
+      <div id="bst-win"><button id="bst-prev" class="bst-nav">‹</button><button id="bst-next" class="bst-nav">›</button><div class="bst-tip" data-i18n="bst_drag"></div></div>
+      <div class="bst-text"><div id="bd-name"></div><div id="bd-lat"></div><div id="bd-facts"></div>
+        <button id="bst-back" class="menu-btn small" data-i18n="back">Назад</button></div>
     </div>
   </div>
 </div>

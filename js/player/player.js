@@ -238,6 +238,8 @@ export function createPlayer(scene, spawn, ctx, world) {
     pl.score += Math.round(pts);
     const isNew = !known.has(pr.t);
     if (isNew) { known.add(pr.t); saveKnown(known); pl.score += 50; }
+    ctx.event?.('eat', { t: pr.t, rr, inflate: pr.inflate || 0 });
+    if (isNew) ctx.event?.('new');
     if (sp.puffer) {
       // tetrodotoxin: the pufferfish hurts from the inside, more when it was blown up
       pl.hp -= 16 + 14 * pr.inflate;
@@ -266,6 +268,7 @@ export function createPlayer(scene, spawn, ctx, world) {
         src.shellN = (src.shellN || 0) + 1;
       }
       if (!pl.shellMsg) { pl.shellMsg = true; ctx.msg(t('shell_held'), [230, 220, 190]); }
+      ctx.event?.('block');
       return;
     }
     const k = src && src.t !== 9 ? clamp(src.len / (pl.L * 2), 0.6, 1.6) : 1;

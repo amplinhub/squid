@@ -47,6 +47,15 @@ function buildSpecies(t) {
 }
 // builds all species, a few per call (yields to the loading screen); returns progress 0..1
 let built = 0;
+// one frame of species t for other views (the bestiary): mouth open / puffed up variants
+export function creatureFrame(t, f, mouth, puffed) {
+  const m = models[t];
+  if (!m) return null;
+  if (puffed && m.puffer) return m.puffer[f % FLIP];
+  return m.frames[mouth ? 1 : 0][f % FLIP];
+}
+export const creatureMaterial = (g) => (g.userData.alpha ? SEE_THROUGH : OPAQUE);
+
 export function buildModelsStep() {
   if (built < NTYPES) buildSpecies(built++);
   return built / NTYPES;

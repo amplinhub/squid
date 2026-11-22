@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { startLoop } from './core/loop.js';
 import { initInput, pollInput, input } from './core/input.js';
 import { applyLang, toggleLang, getLang, t, spName } from './core/i18n.js';
-import { quality, qualityTick, setQualityMode, qualityMode, frameTime } from './core/quality.js';
+import { quality, qualityTick, qualityMode, frameTime } from './core/quality.js';
 import { createRenderer } from './render/renderer.js';
 import { createAtmosphere } from './render/atmosphere.js';
 import { createWorld } from './world/world.js';
@@ -14,7 +14,11 @@ import { createPlayer, stageName } from './player/player.js';
 import { createCreatures, buildModelsStep } from './creatures/creatures.js';
 import { createFx } from './fx/fx.js';
 import { initMessages, msg, msgStep, msgClear } from './ui/messages.js';
-import { isUnlocked, setChar, chosenChar, progress, required } from './core/progress.js';
+import { isUnlocked, setChar, chosenChar, progress, required, missionDone } from './core/progress.js';
+import { createHud } from './ui/hud.js';
+import { createMissions } from './game/missions.js';
+import { createBestiary } from './ui/bestiary.js';
+import { initSettings } from './ui/settings.js';
 import { playLogo } from './title/logo.js';
 import { createSurface } from './title/surface.js';
 import { createTitle } from './title/title.js';
@@ -57,8 +61,9 @@ if (chosenChar() !== 0) player.setChar(chosenChar());
 const R = Math.random, rr = (a, b) => a + R() * (b - a);
 creatures.hooks.bite = (c, dmg) => player.hurt(dmg, c);
 creatures.hooks.threat = (c) => { msg(t(c.sp.fem ? 'threat_f' : 'threat_m', { n: spName(c.sp) }), [255, 120, 100]); threatFlash = 1; };
-creatures.hooks.lost = (c) => msg(t(c.sp.fem ? 'lost_f' : 'lost_m', { n: spName(c.sp) }), [150, 230, 190]);
-creatures.hooks.blind = (c) => msg(t(c.sp.fem ? 'blind_f' : 'blind_m', { n: spName(c.sp) }), [190, 170, 255]);
+creatures.hooks.lost = (c) => { msg(t(c.sp.fem ? 'lost_f' : 'lost_m', { n: spName(c.sp) }), [150, 230, 190]); missionEv('lost'); };
+creatures.hooks.blind = (c) => { msg(t(c.sp.fem ? 'blind_f' : 'blind_m', { n: spName(c.sp) }), [190, 170, 255]); missionEv('blind'); };
+creatures.hooks.scare = () => missionEv('scare');
 creatures.hooks.bored = (c) => msg(t(c.sp.fem ? 'bored_f' : 'bored_m', { n: spName(c.sp) }), [230, 220, 190]);
 creatures.hooks.eaten = (prey) => fx.remains(prey.sp.kind, prey.x, prey.y, prey.z, prey.len, prey.yaw);
 creatures.hooks.ink = (c) => fx.cloud(c.x, c.y, c.z, c.len * 1.2, 1, 6);
@@ -69,12 +74,26 @@ creatures.hooks.bubbles = (c) => {
 };
 let threatFlash = 0;
 
+// ---------- missions (23_missions.gml): +100 points each, they open the nautilus and the octopus ----------
+const missions = createMissions({
+  pl, known: player.known,
+  onComplete: () => {
+    pl.score += 100;
+    const o = missionDone(pl.char);
+    if (o > 0) msg(t('unlocked', { n: t('ch' + o) }), [255, 225, 120]);
+  },
+});
+function missionEv(e, a) { if (mode === 'play' && pl.alive) missions.event(e, a); }
+ctx.event = missionEv;
+
 // ---------- interface ----------
 const isTouch = () => input.touch || matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
 initInput(() => { if (mode === 'play') syncPlayUI(); });
+const hud = createHud({ player, creatures, missions, camera, isTouch });
 // the HUD and the touch controls only while playing
 function syncPlayUI() {
-  const play = mode === 'play';
+  const play = mode === 'play' && !bestiary.active();
+  document.body.classList.toggle('touchdev', isTouch());
   $('hud').hidden = !play;
   $('touch').hidden = !(play && isTouch());
   $('btn-pause').hidden = !play;
@@ -86,22 +105,25 @@ function syncPlayUI() {
 const langBtn = $('btn-lang');
 const syncLangBtn = () => { langBtn.textContent = getLang().toUpperCase(); };
 syncLangBtn();
-langBtn.addEventListener('click', () => { toggleLang(); syncLangBtn(); syncAbility(); if (title.phase() === 2) title.fillSelect(); });
+function langChanged() { syncLangBtn(); syncAbility(); bestiary.refresh(); if (title.phase() === 2) title.fillSelect(); }
+langBtn.addEventListener('click', () => { toggleLang(); langChanged(); });
 
-// pause during the game; the same panel is the settings window of the main menu
+// pause during the game: resume, bestiary, settings, main menu
 let paused = false;
-function setPaused(p, settings = false) {
-  paused = p && !settings;
+function setPaused(p) {
+  paused = p;
   $('pause').hidden = !p;
-  $('sel-quality').value = qualityMode();
-  $('pause-title').textContent = t(settings ? 'menu_settings' : 'paused');
-  $('btn-resume').textContent = t(settings ? 'close' : 'resume');
-  $('btn-mainmenu').hidden = settings;
+  if (!p) { settingsWin.hide(); if (bestiary.active()) bestiary.hide(); }
+  syncPlayUI();
 }
+// the settings window opens from the pause or from the main menu and returns there
+const settingsWin = initSettings(langChanged, () => { if (mode === 'play' && paused) $('pause').hidden = false; });
+const bestiary = createBestiary(renderer, player.known, () => { $('pause').hidden = false; syncPlayUI(); });
 $('btn-pause').addEventListener('click', () => setPaused(true));
 $('btn-resume').addEventListener('click', () => setPaused(false));
 $('btn-mainmenu').addEventListener('click', () => { setPaused(false); toMainMenu(); });
-$('sel-quality').addEventListener('change', (e) => setQualityMode(e.target.value));
+$('btn-settings').addEventListener('click', () => { $('pause').hidden = true; settingsWin.show(); });
+$('btn-bestiary').addEventListener('click', () => { $('pause').hidden = true; bestiary.show(); syncPlayUI(); });
 // the Ability button: the nautilus hides in its shell, the octopus squirts ink, the squid has none
 function syncAbility() {
   const b = $('btn-ability');
@@ -119,10 +141,11 @@ const title = createTitle({
   camNow: () => cam,
   onSelect: (c) => player.setChar(c),
   onLocked: (c) => msg(t(c === 2 ? 'locked_msg_oct' : 'locked_msg'), [255, 200, 150]),
-  onSettings: () => setPaused(true, true),
+  onSettings: () => settingsWin.show(),
   onRebuild: () => newLife(pl.char),
   onStart: (c) => {
     setChar(c); player.setChar(c);
+    missions.reset();
     mode = 'play';
     cam.x = title.cam.x; cam.y = title.cam.y; cam.z = title.cam.z; cam.yaw = pl.yaw * D; cam.init = true;
     syncPlayUI();
@@ -198,18 +221,8 @@ function titleCamera(mtime) {
   return viewDist();
 }
 
-// ---------- temporary status bars (the real HUD comes with stage 7) ----------
-const bars = { hp: $('bar-hp'), st: $('bar-st'), food: $('bar-food') };
-function updateBars() {
-  bars.hp.style.width = clamp(pl.hp / pl.hpmax, 0, 1) * 100 + '%';
-  bars.st.style.width = clamp(pl.st / pl.stmax, 0, 1) * 100 + '%';
-  bars.st.classList.toggle('exh', pl.exh);
-  bars.food.style.width = clamp(pl.food, 0, 100) + '%';
-  $('stat-size').textContent = `${stageName(pl.L)} · ${(pl.L / 50).toFixed(2)} ${t('size_m')}`;
-  $('stat-score').textContent = `${t('score')}: ${pl.score}`;
-  $('stat-depth').textContent = `${Math.round(depthM(pl.z))} ${t('size_m')}`;
-  $('hurt').style.opacity = String(mode === 'play' ? Math.max(pl.hurt * 0.55, threatFlash * 0.25) : 0);
-}
+// red flash when hurt or spotted
+const hurtFx = () => { $('hurt').style.opacity = String(mode === 'play' && !bestiary.active() ? Math.max(pl.hurt * 0.55, threatFlash * 0.25) : 0); };
 
 // ---------- death and a new life ----------
 let deathShown = false;
@@ -271,12 +284,17 @@ function simStep(dt) {
   const inp = pollInput();
   mtime += dt;
   if (mode === 'play') {
+    if (bestiary.active()) { bestiary.step(inp); return; }
+    if (settingsWin.active()) { if (inp.pauseHit) { settingsWin.hide(); $('pause').hidden = false; } return; }
     if (inp.pauseHit && pl.alive) setPaused(!paused);
     if (paused) return;
+  } else if (settingsWin.active()) {
+    if (inp.pauseHit) settingsWin.hide();
+    inp.anyHit = inp.enterHit = inp.pauseHit = false;
   }
   time += dt; stepN++;
   if (mode === 'title') title.step(time, mtime, inp);
-  else player.step(inp, time);
+  else { player.step(inp, time); if (pl.alive) missions.step(); }
   if (stepN === 2 && !initDone) { creatures.endInitialSpawn(); initDone = true; }
   creatures.update(time);
   fx.step(time, cam);
@@ -286,6 +304,14 @@ function simStep(dt) {
 }
 
 function frame(a, dt) {
+  if (bestiary.active()) {
+    // only the bestiary models, drawn into the card windows over the DOM page
+    overG.clearRect(0, 0, over.width, over.height); sky.hidden = true; $('hurt').style.opacity = '0';
+    renderer.setClearColor(0x000000, 0);
+    bestiary.render(mtime);
+    renderer.setClearColor(0x03121c, 1);
+    return;
+  }
   if (!paused) qualityTick(dt);
   const ia = paused ? 1 : a;
   player.render(ia, time);
@@ -316,7 +342,8 @@ function frame(a, dt) {
   renderer.render(scene, camera);
   if (above) surface.drawOverlay(overG, W, H, mtime, pitchDeg, camera.fov, mode === 'title' && title.phase() === 0 ? 1 : 0);
   title.render();
-  updateBars();
+  if (mode === 'play') hud.update(overG, W, H, time, vd);
+  hurtFx();
 
   fpsAcc += dt; fpsN++;
   if (fpsAcc >= 0.5) { fpsShow = Math.round(fpsN / fpsAcc); fpsAcc = 0; fpsN = 0; }
