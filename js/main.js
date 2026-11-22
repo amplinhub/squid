@@ -133,6 +133,9 @@ function frame(a, dt) {
   }
 }
 
+// handle for automated checks in the browser console (no effect on the game)
+window.__gu = { squid, world, atmo, camera, renderer, cam };
+
 load().then(() => {
   startLoop(
     (dt) => {
