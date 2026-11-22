@@ -1,0 +1,13 @@
+{
+  "files": {
+    "css/main.css": "4209889b27",
+    "js/core/i18n.js": "0c954a0d67",
+    "js/core/input.js": "5296f7f256",
+    "js/core/loop.js": "af7351dd6a",
+    "js/core/quality.js": "db50c7dc0c",
+    "js/main.js": "9a724cbd76",
+    "js/player/proto.js": "1c1ee25033",
+    "js/render/renderer.js": "9c5d08cce9",
+    "js/world/testScene.js": "a1ab76e7bc"
+  }
+}

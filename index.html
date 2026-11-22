@@ -5,10 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#061a26">
 <title>GROW UP</title>
-<link rel="stylesheet" href="css/main.css">
-<script type="importmap">
-{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js" } }
-</script>
+<style>html, body { background: #03121c; }</style>
 </head>
 <body>
 <canvas id="game"></canvas>
@@ -58,6 +55,33 @@
   </div>
 </div>
 
-<script type="module" src="js/main.js"></script>
+<!-- Boot: manifest.json (never cached) gives a content hash for every file; each file is loaded as
+     "file?h=hash" through an import map, so an update reaches players at once and old and new files
+     never mix. Without the manifest the game still starts, just without the stamps. -->
+<script>
+(function () {
+  var THREE_URL = 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
+  function start(files) {
+    var q = function (f) { return files[f] ? f + '?h=' + files[f] : f; };
+    var map = { three: THREE_URL };
+    for (var f in files) if (/\.js$/.test(f)) map['./' + f] = './' + q(f);
+    var im = document.createElement('script');
+    im.type = 'importmap';
+    im.textContent = JSON.stringify({ imports: map });
+    document.head.appendChild(im);
+    var css = document.createElement('link');
+    css.rel = 'stylesheet'; css.href = q('css/main.css');
+    css.onload = css.onerror = function () {
+      var s = document.createElement('script');
+      s.type = 'module'; s.src = './' + q('js/main.js');
+      document.body.appendChild(s);
+    };
+    document.head.appendChild(css);
+  }
+  fetch('manifest.json', { cache: 'no-store' })
+    .then(function (r) { return r.ok ? r.json() : { files: {} }; })
+    .then(function (m) { start(m.files || {}); }, function () { start({}); });
+})();
+</script>
 </body>
 </html>
