@@ -139,7 +139,7 @@ function frame(a, dt) {
     dbg.textContent = `FPS ${fpsShow}  ${(frameTime() * 1000).toFixed(1)} ms\n` +
       `Q ${quality().name} (${qualityMode()})  px ${renderer.getPixelRatio().toFixed(2)}  view ${Math.round(vd)}\n` +
       `draw ${info.calls}  tri ${info.triangles}\n` +
-      `chunks ${st.loaded}  build ${st.pending}  ${st.buildMs.toFixed(1)} ms\n` +
+      `chunks ${st.loaded}  build ${st.pending}  ${st.buildMs.toFixed(1)} ms  fish ${creatures.stats.n}/${creatures.stats.drawn}\n` +
       `depth ${Math.round(depthM(p.z))} m  bottom ${Math.round(depthM(h))} m  ${BIOMES[biomeAt(p.x, p.y, h)]}\n` +
       `seed ${worldSeed()}  v ${pl.spd.toFixed(2)}  st ${Math.round(pl.st)}${pl.exh ? "!" : ""}  L ${pl.L.toFixed(0)}` + (input.touch ? '  touch' : '');
   }
