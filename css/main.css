@@ -368,3 +368,9 @@ select { font: inherit; color: var(--text); background: var(--sea-0); border: 1p
 .playing .top-right { right: calc(var(--safe-r) + 2.4vmin + clamp(96px, 18vmin, 160px)); }
 @media (orientation: portrait) { .playing .top-right { right: calc(var(--safe-r) + 2.4vmin + 24vmin); } }
 .bst-open #msgs { display: none; }
+@media (orientation: portrait) {
+  /* the language / pause buttons stack in a column between the panel and the depth gauge */
+  .playing .top-right { flex-direction: column; }
+  #panel { width: 58vw; }
+  .hint { top: auto; bottom: calc(var(--safe-b) + 22vh); }
+}
