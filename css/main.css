@@ -268,7 +268,7 @@ select { font: inherit; color: var(--text); background: var(--sea-0); border: 1p
 #depth-lbl { margin: 0.3em auto 0; display: inline-block; padding: 0.15em 0.7em; border: 1px solid #96682a; border-radius: 0.4em; background: rgba(6, 22, 30, 0.75); font-size: calc(var(--u) * 0.85); white-space: nowrap; }
 
 /* missions */
-#missions { position: absolute; right: calc(var(--safe-r) + 1.2vmin); top: calc(var(--safe-t) + clamp(96px, 18vmin, 160px) + 6vmin); width: clamp(230px, 30vmin + 90px, 360px); }
+#missions { position: absolute; right: calc(var(--safe-r) + 1.2vmin); top: calc(var(--safe-t) + clamp(96px, 18vmin, 160px) + 3vmin + var(--u) * 2.4); width: clamp(230px, 30vmin + 90px, 360px); }
 #ms-head, #ms-note { text-align: right; font-size: calc(var(--u) * 0.7); color: #ffde96; text-shadow: 0 1px 2px #000; margin-bottom: 0.4em; }
 #ms-note { color: #c8e2e2; margin-top: 0.3em; }
 .ms { position: relative; display: flex; align-items: center; gap: 0.6em; margin-bottom: 0.45em; padding: 0.45em 0.7em; border-radius: 0.7em;
@@ -373,4 +373,8 @@ select { font: inherit; color: var(--text); background: var(--sea-0); border: 1p
   .playing .top-right { flex-direction: column; }
   #panel { width: 58vw; }
   .hint { top: auto; bottom: calc(var(--safe-b) + 22vh); }
+}
+@media (orientation: landscape) {
+  /* touch landscape: the controls hint rides above the sonar */
+  .touchdev .hint { bottom: calc(var(--safe-b) + 3vmin + clamp(96px, 20vmin, 150px) + var(--u) * 2.2); }
 }
