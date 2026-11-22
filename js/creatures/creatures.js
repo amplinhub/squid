@@ -488,6 +488,8 @@ export function createCreatures(scene, world, atmo, env) {
 
   return {
     list, stats, hooks, update, render,
+    // for tests and the bestiary later: put one creature of species t at (x, y, z)
+    spawn: (t, x, y, z) => create(t, x, y, z, null),
     edibleBy, dangerTo,
     endInitialSpawn() { initialSpawn = false; },
     clear() { for (const c of list) destroy(c); list.length = 0; },
