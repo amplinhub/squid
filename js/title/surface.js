@@ -83,7 +83,7 @@ export function createSurface(scene) {
   const horizon = (H, pitchDeg, fov) => H / 2 + Math.tan(pitchDeg * Math.PI / 180) * (H / 2) / Math.tan(fov * Math.PI / 360);
 
   function drawSky(c2, W, H, t, pitchDeg, fov) {
-    const s = H / 720, hy = horizon(H, pitchDeg, fov);
+    const s = Math.min(H / 720, W / 1280 * 1.6), hy = horizon(H, pitchDeg, fov);
     const c0 = 'rgb(22,44,96)', c1 = 'rgb(112,122,178)', c2c = 'rgb(255,196,150)';
     c2.globalAlpha = 1; c2.globalCompositeOperation = 'source-over';
     let gr = c2.createLinearGradient(0, 0, 0, hy * 0.55); gr.addColorStop(0, c0); gr.addColorStop(1, c1);
@@ -140,7 +140,7 @@ export function createSurface(scene) {
 
   // sun glitter on the water, the sun's path, lens flare; vignette for the menu
   function drawOverlay(c2, W, H, t, pitchDeg, fov, vignette) {
-    const s = H / 720, hy = horizon(H, pitchDeg, fov), sx = W * 0.62, sy = hy - 34 * s;
+    const s = Math.min(H / 720, W / 1280 * 1.6), hy = horizon(H, pitchDeg, fov), sx = W * 0.62, sy = hy - 34 * s;
     c2.globalCompositeOperation = 'lighter';
     c2.fillStyle = 'rgb(255,214,160)';
     for (let k = 0; k < 90; k++) {
