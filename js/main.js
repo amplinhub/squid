@@ -151,7 +151,7 @@ ctx.onDeath = () => { msgClear(); deathShown = false; };
 function showDeath() {
   deathShown = true;
   const s = Math.round(pl.time), mm = Math.floor(s / 60), ss = String(s % 60).padStart(2, '0');
-  $('dead-cause').textContent = pl.killer ? t('dead_by', { k: spName(pl.killer, true) }) : t('dead_starved');
+  $('dead-cause').textContent = pl.killer ? t(pl.killer.fem ? 'dead_by_f' : 'dead_by_m', { k: spName(pl.killer, true) }) : t('dead_starved');
   $('dead-stats').innerHTML =
     `<div><span>${t('dead_size')}</span><b>${stageName(pl.maxL)} · ${(pl.maxL / 50).toFixed(2)} ${t('size_m')}</b></div>` +
     `<div><span>${t('dead_eaten')}</span><b>${pl.eaten}</b></div>` +

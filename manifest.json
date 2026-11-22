@@ -1,7 +1,7 @@
 {
   "files": {
     "css/main.css": "865b20ccc8",
-    "js/core/i18n.js": "db9cf59e3f",
+    "js/core/i18n.js": "54e75a12ec",
     "js/core/input.js": "5296f7f256",
     "js/core/loop.js": "af7351dd6a",
     "js/core/quality.js": "188dd064b7",
@@ -10,7 +10,7 @@
     "js/creatures/species.js": "4a5c7c4227",
     "js/creatures/squidModel.js": "53bdfc4b3b",
     "js/fx/fx.js": "8b9281c854",
-    "js/main.js": "e19f9e1753",
+    "js/main.js": "263a3c6b1f",
     "js/mesh/builder.js": "00a29f6afd",
     "js/player/player.js": "de33893109",
     "js/render/atmosphere.js": "2aa1b2e0e0",

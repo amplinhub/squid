@@ -13,7 +13,7 @@ const DICT = {
     puffer: 'Рыба-фугу ядовита! Здоровье падает', new_species: 'Новое существо: {n} — +{p} очков',
     st0: 'Малёк', st1: 'Юный кальмар', st2: 'Охотник рифа', st3: 'Гроза глубин', st4: 'Гигантский кальмар', st5: 'Кракен',
     hp: 'Здоровье', stamina: 'Выносливость', food: 'Сытость', score: 'Очки', size_m: 'м',
-    dead_title: 'Кальмар погиб', dead_by: 'Его съел(а): {k}', dead_starved: 'Причина: голод', dead_size: 'Размер', dead_eaten: 'Съедено',
+    dead_title: 'Кальмар погиб', dead_by_m: 'Кальмара съел {k}', dead_by_f: 'Кальмара съела {k}', dead_starved: 'Причина: голод', dead_size: 'Размер', dead_eaten: 'Съедено',
     dead_score: 'Очки', dead_time: 'Время', again: 'Ещё раз', combo: 'Комбо ×{k}',
   },
   en: {
@@ -28,7 +28,7 @@ const DICT = {
     puffer: 'Pufferfish is poisonous! Health drops', new_species: 'New creature: {n} — +{p} points',
     st0: 'Fry', st1: 'Young squid', st2: 'Reef hunter', st3: 'Terror of the deep', st4: 'Giant squid', st5: 'Kraken',
     hp: 'Health', stamina: 'Stamina', food: 'Fullness', score: 'Score', size_m: 'm',
-    dead_title: 'Your squid died', dead_by: 'Eaten by: {k}', dead_starved: 'Cause: starvation', dead_size: 'Size', dead_eaten: 'Eaten',
+    dead_title: 'Your squid died', dead_by_m: 'Eaten by: {k}', dead_by_f: 'Eaten by: {k}', dead_starved: 'Cause: starvation', dead_size: 'Size', dead_eaten: 'Eaten',
     dead_score: 'Score', dead_time: 'Time', again: 'Play again', combo: 'Combo ×{k}',
   },
 };
