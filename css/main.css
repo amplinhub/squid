@@ -183,7 +183,8 @@ select { font: inherit; color: var(--text); background: var(--sea-0); border: 1p
 .sel-back { position: absolute; left: calc(var(--safe-l) + var(--u)); top: calc(var(--safe-t) + var(--u)); font-size: calc(var(--u) * 1.6); line-height: 1; }
 .sel-arrow {
   position: absolute; top: 34vh; width: clamp(48px, 9vmin, 96px); height: clamp(64px, 12vmin, 128px); border: 0;
-  background: url(../assets/ui/arrow.png) center / contain no-repeat; animation: arrow 1.2s ease-in-out infinite;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 128'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23f6dc9c'/%3E%3Cstop offset='.5' stop-color='%23d9a85c'/%3E%3Cstop offset='1' stop-color='%23a8743a'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M14 10 L86 64 L14 118 Z' fill='url(%23a)' stroke='%23402818' stroke-width='6' stroke-linejoin='round'/%3E%3Cpath d='M22 26 L70 64 L22 102 Z' fill='none' stroke='%23fff3c8' stroke-opacity='.55' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat; animation: arrow 1.2s ease-in-out infinite;
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.45));
 }
 .sel-arrow.right { right: calc(var(--safe-r) + 12vw); }
 .sel-arrow.left { left: calc(var(--safe-l) + 12vw); transform: scaleX(-1); animation-name: arrowL; }
