@@ -1,10 +1,12 @@
 // Quality presets and the automatic choice. "Auto" starts from the device class (phones on medium,
 // desktops on high), then watches the real frame time and steps down when frames take too long,
 // or back up after a long calm stretch.
+// viewMult and gfx are the original's graphics settings (17_menu.gml): view range x0.8 / x1 / x1.15,
+// gfx 0 has no caustics, marine snow or light shafts; buildMs is the world generation budget per frame
 export const PRESETS = [
-  { name: 'low',  pixelRatio: 1.0,  viewDist: 620, antialias: false, particles: 60 },
-  { name: 'mid',  pixelRatio: 1.5,  viewDist: 760, antialias: false, particles: 110 },
-  { name: 'high', pixelRatio: 2.0,  viewDist: 900, antialias: true,  particles: 170 },
+  { name: 'low',  pixelRatio: 1.0, viewMult: 0.8,  gfx: 0, antialias: false, particles: 70,  buildMs: 3 },
+  { name: 'mid',  pixelRatio: 1.5, viewMult: 1.0,  gfx: 1, antialias: false, particles: 90,  buildMs: 4 },
+  { name: 'high', pixelRatio: 2.0, viewMult: 1.15, gfx: 2, antialias: true,  particles: 170, buildMs: 5 },
 ];
 
 const isPhone = matchMedia('(pointer: coarse)').matches;
