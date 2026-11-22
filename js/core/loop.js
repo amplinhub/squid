@@ -10,6 +10,8 @@ export function startLoop(update, render) {
   let running = true;
   function frame(now) {
     if (!running) return;
+    // the next frame is requested first: an error in one frame must not freeze the game
+    requestAnimationFrame(frame);
     let dt = (now - last) / 1000;
     last = now;
     if (dt > 0.25) dt = 0.25;
@@ -18,7 +20,6 @@ export function startLoop(update, render) {
     while (acc >= STEP && n < MAX_STEPS) { update(STEP); acc -= STEP; n++; }
     if (n === MAX_STEPS) acc = 0;
     render(acc / STEP, dt);
-    requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
   return {

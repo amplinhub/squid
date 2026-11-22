@@ -213,7 +213,7 @@ export function createBestiary(renderer, known, onClose) {
         // so the model is squeezed with the card)
         const fw = w.width / Math.max(0.02, sx);
         hideAll();
-        pose(k, Math.min(fw, w.height) * 0.82, w.height, time * 40 + k * 37, Math.sin((time + k * 1.7) * 1.2) * 5);
+        pose(k, Math.min(fw, w.height) * 0.82, w.height, time * 40 + k * 37, Math.sin((time + k * 1.7) * 1.2) * 5, time);
         renderer.setViewport(w.left, H - w.bottom, w.width, w.height);
         renderer.setScissor(w.left, H - bottom, w.width, bottom - top);
         cam.aspect = fw / w.height; cam.updateProjectionMatrix();

@@ -94,6 +94,7 @@ const hud = createHud({ player, creatures, missions, camera, isTouch });
 function syncPlayUI() {
   const play = mode === 'play' && !bestiary.active();
   document.body.classList.toggle('touchdev', isTouch());
+  document.body.classList.toggle('playing', play);
   $('hud').hidden = !play;
   $('touch').hidden = !(play && isTouch());
   $('btn-pause').hidden = !play;

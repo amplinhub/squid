@@ -363,3 +363,7 @@ select { font: inherit; color: var(--text); background: var(--sea-0); border: 1p
   #bst-win { flex: 1 1 40%; }
   .bst-text { flex: 1 1 60%; }
 }
+
+/* while playing the language / pause buttons stand left of the depth gauge */
+.playing .top-right { right: calc(var(--safe-r) + 2.4vmin + clamp(96px, 18vmin, 160px)); }
+@media (orientation: portrait) { .playing .top-right { right: calc(var(--safe-r) + 2.4vmin + 24vmin); } }
