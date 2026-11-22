@@ -431,6 +431,35 @@ export function createPlayer(scene, spawn, ctx, world) {
     }
   }
 
+  // another creature in the same place (the select screen): health and model change, nothing else
+  function setChar(ch) {
+    pl.char = ch; pl.hp = pl.hpmax = CHARS[ch].hp;
+    Object.assign(rig.s, { x: pl.x, y: pl.y, z: pl.z, yaw: pl.yaw * D, L: pl.L });
+    rig.init();
+    oct.reset(pl);
+    showModel();
+  }
+
+  // title screens: the creature hovers in place, turning a little to show itself (scr_title_step)
+  function titleStep(time, mtime, baseYaw) {
+    pl.prev.x = pl.x; pl.prev.y = pl.y; pl.prev.z = pl.z;
+    pl.yaw = baseYaw + Math.sin(mtime * 0.35) * 32;
+    pl.pitch = Math.sin(mtime * 0.5) * 6; pl.roll = 0;
+    pl.spd = 0.4; pl.boost = 0; pl.shell = 0; pl.vx = pl.vy = pl.vz = 0;
+    pl.open = 0.15 + 0.15 * Math.sin(time);
+    if (pl.char === 0) {
+      Object.assign(rig.s, { x: pl.x, y: pl.y, z: pl.z, yaw: pl.yaw * D, pitch: pl.pitch * D, roll: 0, L: pl.L, spread: pl.open });
+      rig.anim(0.4, 0, time);
+    } else if (pl.char === 1) {
+      pl.ntHide = approach(pl.ntHide, 0, 0.12);
+      pl.ntPh += 0.05 + 0.4 * 0.04;
+    } else {
+      const o = oct.o;
+      o.byaw = pl.yaw; o.bpitch = pl.pitch - 18; o.gnd = 0; o.jet = 0; o.atk = 0; o.camo = 0;
+      oct.arms(pl, time, ctx.frame());
+    }
+  }
+
   // a: interpolation factor between the last two steps
   const pos = (a) => ({ x: pl.prev.x + (pl.x - pl.prev.x) * a, y: pl.prev.y + (pl.y - pl.prev.y) * a, z: pl.prev.z + (pl.z - pl.prev.z) * a });
   function render(a, time) {
@@ -457,5 +486,5 @@ export function createPlayer(scene, spawn, ctx, world) {
     } else oct.draw(pl, p.x, p.y, p.z, time);
   }
 
-  return { pl, rig, oct, step, render, pos, hurt, die, reset, known, showModel };
+  return { pl, rig, oct, step, titleStep, setChar, render, pos, hurt, die, reset, known, showModel };
 }

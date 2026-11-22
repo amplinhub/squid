@@ -96,6 +96,11 @@ export function pollInput() {
   state.boostHit = boost && !prev.boost; state.abilityHit = ability && !prev.ability; state.pauseHit = pause && !prev.pause;
   state.boost = boost; state.ability = ability; state.pause = pause;
   prev.boost = boost; prev.ability = ability; prev.pause = pause;
+  // menu navigation (pressed this step): arrows / WASD, Enter / Space
+  const nav = { up: k('ArrowUp') || k('KeyW'), down: k('ArrowDown') || k('KeyS'), left: k('ArrowLeft') || k('KeyA'), right: k('ArrowRight') || k('KeyD'), enter: k('Enter') || k('NumpadEnter') || k('Space') };
+  for (const n in nav) { state[n + 'Hit'] = nav[n] && !prev[n]; prev[n] = nav[n]; }
+  // any key or button at all (skipping the logo)
+  state.anyHit = keys.size > 0 && !prev.any; prev.any = keys.size > 0;
   return state;
 }
 

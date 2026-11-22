@@ -146,3 +146,70 @@ select { font: inherit; color: var(--text); background: var(--sea-0); border: 1p
   .hint { white-space: normal; width: 90vw; bottom: auto; top: calc(var(--safe-t) + var(--u) * 16); }
   #msgs { top: calc(var(--safe-t) + var(--u) * 9); }
 }
+
+/* ---------- layers: sky (2D) behind the transparent WebGL canvas, overlay (2D) in front ---------- */
+#sky, #overlay { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+#sky { z-index: 0; }
+#game { z-index: 1; }
+#overlay { z-index: 2; pointer-events: none; }
+#hud { z-index: 10; }
+#msgs { position: fixed; z-index: 11; }
+.top-right { position: fixed; z-index: 13; }
+
+/* ---------- title: main menu above the water ---------- */
+.title-layer { position: fixed; inset: 0; z-index: 15; }
+.title-col {
+  position: absolute; left: calc(var(--safe-l) + 25.8vw); top: 22vh; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: calc(var(--u) * 0.6);
+}
+#title-logo { width: min(48vw, 86vh); filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.35)); margin-bottom: calc(var(--u) * 1.2); }
+/* buttons in the lettering of the title: orange gradient, dark teal outline, soft glow */
+.tbtn-menu {
+  background: linear-gradient(#fff6c8 10%, #ffb347 55%, #c8604a 95%); -webkit-background-clip: text; background-clip: text;
+  color: transparent; -webkit-text-stroke: max(2px, 0.4vmin) #0c3a4a; border: 0; padding: 0.1em 0.4em;
+  font: 900 clamp(26px, 6.2vmin, 64px)/1.1 "Arial Black", "Segoe UI Black", Roboto, system-ui, sans-serif; letter-spacing: 0.02em;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.35)); opacity: 0.85; transition: transform 0.2s, opacity 0.2s, filter 0.2s;
+}
+.tbtn-menu.on { transform: scale(1.12); opacity: 1; filter: drop-shadow(0 0 14px rgba(255, 170, 90, 0.75)); }
+@media (orientation: portrait) {
+  .title-col { left: 50%; top: 18vh; }
+  #title-logo { width: 86vw; }
+}
+
+/* ---------- creature select ---------- */
+.sel-head { position: absolute; left: 0; right: 0; top: calc(var(--safe-t) + 3vh); text-align: center; text-shadow: 0 2px 6px #000; }
+#sel-name { font: 900 clamp(28px, 7vmin, 66px)/1 "Arial Black", "Segoe UI Black", Roboto, sans-serif; color: #ffde8c; letter-spacing: 0.05em; }
+#sel-sub { margin-top: 0.4em; font-size: calc(var(--u) * 0.95); color: #bee6e6; }
+.sel-back { position: absolute; left: calc(var(--safe-l) + var(--u)); top: calc(var(--safe-t) + var(--u)); font-size: calc(var(--u) * 1.6); line-height: 1; }
+.sel-arrow {
+  position: absolute; top: 34vh; width: clamp(48px, 9vmin, 96px); height: clamp(64px, 12vmin, 128px); border: 0;
+  background: url(../assets/ui/arrow.png) center / contain no-repeat; animation: arrow 1.2s ease-in-out infinite;
+}
+.sel-arrow.right { right: calc(var(--safe-r) + 12vw); }
+.sel-arrow.left { left: calc(var(--safe-l) + 12vw); transform: scaleX(-1); animation-name: arrowL; }
+@keyframes arrow { 50% { translate: 6px 0; } }
+@keyframes arrowL { 50% { translate: -6px 0; } }
+#sel-lock { position: absolute; left: 50%; top: 30vh; transform: translateX(-50%); text-align: center; width: min(90vw, 760px); }
+#sel-lock img { width: clamp(48px, 9vmin, 80px); animation: lockwob 2s ease-in-out infinite; }
+#sel-locktxt { color: #ffc896; font-weight: 700; text-shadow: 0 2px 4px #000; margin-top: 0.4em; }
+@keyframes lockwob { 50% { rotate: 6deg; } }
+.sel-card {
+  position: absolute; left: 50%; bottom: calc(var(--safe-b) + 1.5vh); transform: translateX(-50%);
+  width: min(94vw, 900px); max-height: 46vh; overflow-y: auto; padding: calc(var(--u) * 1) calc(var(--u) * 1.4);
+  font-size: calc(var(--u) * 0.82); line-height: 1.4;
+}
+#sel-abil { margin: 0.7em 0 0.5em; color: #ffd678; font-weight: 700; font-size: 0.9em; }
+#sel-ctrl { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 0.35em 1.2em; border-top: 1px solid rgba(176, 128, 58, 0.5); padding-top: 0.6em; }
+.crow { display: flex; align-items: center; gap: 0.3em; }
+.crow span:last-child { margin-left: 0.4em; }
+.key {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 1.9em; height: 1.9em; padding: 0 0.4em;
+  border-radius: 0.35em; background: linear-gradient(#ffffff, #dfe6ea); color: #28323e; font-weight: 800; font-size: 0.85em;
+  box-shadow: 0 2px 0 #9aa6ae;
+}
+.key.wide { min-width: 3.6em; }
+#sel-go { position: sticky; bottom: 0; margin: 0.8em auto 0; max-width: 260px; }
+#sel-go.off { filter: grayscale(1) brightness(0.8); }
+
+/* white water flash when the camera breaks through the surface */
+#splash { position: fixed; inset: 0; z-index: 16; pointer-events: none; opacity: 0; background: linear-gradient(rgb(230, 250, 255), rgb(120, 200, 220)); }

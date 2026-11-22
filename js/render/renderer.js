@@ -8,9 +8,10 @@ THREE.ColorManagement.enabled = false;
 
 export function createRenderer(canvas) {
   const q = quality();
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: q.antialias, powerPreference: 'high-performance' });
+  // alpha: above the water the canvas is transparent and the 2D sky shows through it
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: q.antialias, alpha: true, powerPreference: 'high-performance' });
   renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
-  renderer.setClearColor(0x03121c);
+  renderer.setClearColor(0x03121c, 1);
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(62, 1, 3, 3000);

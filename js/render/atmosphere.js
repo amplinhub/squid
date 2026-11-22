@@ -320,6 +320,14 @@ export function createAtmosphere(scene, camera, renderer) {
   // shafts), 1, 2; t: game time in seconds
   function update(t, cam, vd, gfx) {
     uTime.value = t;
+    // above the water (title menu): only the ocean top is drawn, fogged into the horizon colour
+    const above = cam.z > SURF_Z;
+    bg.visible = !above;
+    if (above) {
+      scene.fog.color.setRGB(255 / 255, 196 / 255, 150 / 255); scene.fog.near = 300; scene.fog.far = 4300;
+      snow.visible = false; shafts.visible = false; surface.count = 0;
+      return;
+    }
     const dt = depthT(cam.z);
     fogc.copy(mixC(FOG_SHALLOW, FOG_DEEP, Math.pow(dt, 0.7)));
     topc.copy(mixC(fogc, TOP_LIGHT, 0.6 * Math.pow(1 - dt, 1.3)));

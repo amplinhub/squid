@@ -19,6 +19,10 @@ const DICT = {
     blind_m: '{n} ослеп в чернилах!', blind_f: '{n} ослепла в чернилах!', bored_m: '{n} потерял интерес — уплывайте!', bored_f: '{n} потеряла интерес — уплывайте!',
     ch0: 'Кальмар', ch1: 'Наутилус', ch2: 'Осьминог', creature: 'Существо', locked: 'закрыто', abil1: 'Раковина', abil2: 'Чернила',
     unlocked: 'Открыт новый персонаж: {n}!',
+    choose: 'Выберите существо', go: 'Плыть!', locked_btn: 'Закрыто', menu_dive: 'Погружение', menu_settings: 'Настройки', main_menu: 'Главное меню',
+    locked_any: 'Закрыто: выполните ещё {k} заданий (выполнено {d} из {n})', locked_oct: 'Закрыто: выполните ещё {k} заданий, играя за наутилуса (выполнено {d} из {n})',
+    locked_msg: 'Этот персонаж пока закрыт — выполняйте задания', locked_msg_oct: 'Осьминог откроется после заданий, выполненных за наутилуса',
+    start_tip: 'Ешьте тех, кто меньше вас. Следите за голодом!', language: 'Язык', close: 'Закрыть',
   },
   en: {
     loading: 'Loading…', load_scene: 'Seabed', load_creatures: 'Sea creatures', load_done: 'Ready',
@@ -38,6 +42,10 @@ const DICT = {
     blind_m: '{n} is blinded by the ink!', blind_f: '{n} is blinded by the ink!', bored_m: '{n} lost interest — swim away!', bored_f: '{n} lost interest — swim away!',
     ch0: 'Squid', ch1: 'Nautilus', ch2: 'Octopus', creature: 'Creature', locked: 'locked', abil1: 'Shell', abil2: 'Ink',
     unlocked: 'New creature unlocked: {n}!',
+    choose: 'Choose your creature', go: 'Swim!', locked_btn: 'Locked', menu_dive: 'Dive', menu_settings: 'Settings', main_menu: 'Main menu',
+    locked_any: 'Locked: complete {k} more missions ({d} of {n} done)', locked_oct: 'Locked: complete {k} more missions as the nautilus ({d} of {n} done)',
+    locked_msg: 'This creature is still locked — complete missions', locked_msg_oct: 'The octopus opens after missions completed as the nautilus',
+    start_tip: 'Eat those smaller than you. Watch your hunger!', language: 'Language', close: 'Close',
   },
 };
 

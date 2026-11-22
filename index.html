@@ -8,17 +8,43 @@
 <style>html, body { background: #03121c; }</style>
 </head>
 <body>
+<canvas id="sky"></canvas>
 <canvas id="game"></canvas>
+<canvas id="overlay"></canvas>
 
-<!-- loading screen -->
-<div id="loading" class="screen">
+<!-- loading screen (shown only if the logo has finished before everything is ready) -->
+<div id="loading" class="screen" hidden>
   <div class="load-box">
     <div class="load-bar"><div id="load-fill"></div></div>
     <div id="load-text" data-i18n="loading">Загрузка…</div>
   </div>
 </div>
 
-<!-- HUD (stage 0: only a debug line and buttons) -->
+<!-- main menu above the water -->
+<div id="title-menu" class="title-layer" hidden>
+  <div class="title-col">
+    <img id="title-logo" src="assets/ui/growup.png" alt="GROW UP">
+    <button class="tbtn-menu" data-i18n="menu_dive">Погружение</button>
+    <button class="tbtn-menu" data-i18n="menu_settings">Настройки</button>
+  </div>
+</div>
+
+<!-- creature select -->
+<div id="select" class="title-layer" hidden>
+  <button id="sel-back" class="icon-btn sel-back" aria-label="back">‹</button>
+  <div class="sel-head"><div id="sel-name"></div><div id="sel-sub"></div></div>
+  <button id="sel-left" class="sel-arrow left" aria-label="previous"></button>
+  <button id="sel-right" class="sel-arrow right" aria-label="next"></button>
+  <div id="sel-lock" hidden><img src="assets/ui/lock.png" alt=""><div id="sel-locktxt"></div></div>
+  <div class="sel-card panel">
+    <div id="sel-desc"></div>
+    <div id="sel-abil"></div>
+    <div id="sel-ctrl"></div>
+    <button id="sel-go" class="menu-btn"></button>
+  </div>
+</div>
+<div id="splash"></div>
+
 <div id="hurt"></div>
 <div id="hud" hidden>
   <!-- temporary status panel (the full HUD comes with stage 7) -->
@@ -29,16 +55,16 @@
     <div class="bar"><div id="bar-food" class="fill food"></div></div>
     <div class="st-row"><span id="stat-score"></span><span id="stat-depth"></span></div>
   </div>
-  <div id="msgs"></div>
   <div id="debug"></div>
-  <div class="top-right">
-    <button id="btn-lang" class="icon-btn" aria-label="language">RU</button>
-    <button id="btn-pause" class="icon-btn" aria-label="pause">II</button>
-  </div>
   <div id="hint" class="hint" data-i18n="hint_keys"></div>
 </div>
+<div id="msgs"></div>
+<div class="top-right">
+  <button id="btn-lang" class="icon-btn" aria-label="language">RU</button>
+  <button id="btn-pause" class="icon-btn" aria-label="pause">II</button>
+</div>
 
-<!-- touch controls: shown only on touch devices -->
+<!-- touch controls: shown only on touch devices while playing -->
 <div id="touch" hidden>
   <div id="stick-zone"><div id="stick-base"><div id="stick-knob"></div></div></div>
   <div id="touch-buttons">
@@ -58,16 +84,12 @@
   </div>
 </div>
 
-<!-- pause -->
+<!-- pause / settings -->
 <div id="pause" class="screen dim" hidden>
   <div class="panel menu">
-    <h1 data-i18n="paused">Пауза</h1>
+    <h1 id="pause-title" data-i18n="paused">Пауза</h1>
     <button id="btn-resume" class="menu-btn" data-i18n="resume">Продолжить</button>
-    <!-- temporary: choosing the creature until the menu of stage 6 -->
-    <div class="row">
-      <span data-i18n="creature">Существо</span>
-      <select id="sel-char"></select>
-    </div>
+    <button id="btn-mainmenu" class="menu-btn" data-i18n="main_menu">Главное меню</button>
     <div class="row">
       <span data-i18n="quality">Качество</span>
       <select id="sel-quality">
