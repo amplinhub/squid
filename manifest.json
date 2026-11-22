@@ -1,6 +1,6 @@
 {
   "files": {
-    "css/main.css": "3ec2952a26",
+    "css/main.css": "cb31072481",
     "js/core/i18n.js": "457be00c69",
     "js/core/images.js": "29d0e9d812",
     "js/core/input.js": "4ef2857eec",
@@ -13,7 +13,7 @@
     "js/creatures/squidModel.js": "3c72dd233a",
     "js/fx/fx.js": "9195f7643d",
     "js/game/missions.js": "682948833f",
-    "js/main.js": "cd301f63b8",
+    "js/main.js": "bf764dec37",
     "js/mesh/builder.js": "00a29f6afd",
     "js/mesh/xform.js": "b1df4b6d33",
     "js/player/nautilus.js": "fab4d65189",
