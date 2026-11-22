@@ -7,7 +7,7 @@ import { MeshBuilder, rgb, merge, mul } from '../mesh/builder.js';
 import { makeRng } from '../world/terrain.js';
 import { P } from '../mesh/xform.js';
 
-import { loadImage as img } from '../core/images.js';
+import { loadImage as img, loadCausticFrames } from '../core/images.js';
 // an image multiplied by a colour (canvas 2D has no tinting)
 function tinted(im, col) {
   const c = document.createElement('canvas'); c.width = im.width; c.height = im.height;
@@ -82,10 +82,12 @@ function buildFloor() {
 
 // renderer: the game's WebGL renderer; overlay: a 2D canvas above it. Resolves when the logo has faded out.
 export async function playLogo(renderer, overlay, skipSignal) {
-  const [logo, bub, vign, ...cf] = await Promise.all([img('assets/ui/spr_amplin.png'), img('assets/ui/uibubble.png'), img('assets/ui/vignette.png'),
-    ...[...Array(16)].map((_, i) => img(`assets/tex/caustic_${String(i).padStart(2, '0')}.png`))]);
-  const caustA = cf.map((c) => c && tinted(c, [150, 210, 200])), caustB = cf.map((c) => c && tinted(c, [110, 170, 170]));
-  const vignT = vign && tinted(vign, [0, 20, 30]);
+  // the pictures fill in as they arrive: the floor and the starfish need none, so the logo starts at once
+  let logo = null, bub = null, vignT = null, caustA = [], caustB = [];
+  img('assets/ui/spr_amplin.png', 6000).then((i) => { logo = i; });
+  img('assets/ui/uibubble.png', 6000).then((i) => { bub = i; });
+  img('assets/ui/vignette.png', 6000).then((i) => { if (i) vignT = tinted(i, [0, 20, 30]); });
+  loadCausticFrames(6000).then((cf) => { if (cf) { caustA = cf.map((c) => tinted(c, [150, 210, 200])); caustB = cf.map((c) => tinted(c, [110, 170, 170])); } });
   const { floor, star } = buildFloor();
   const scene = new THREE.Scene();
   scene.fog = new THREE.Fog(new THREE.Color().setRGB(30 / 255, 110 / 255, 130 / 255), 520, 1500);
@@ -123,6 +125,7 @@ export async function playLogo(renderer, overlay, skipSignal) {
       const caust = (tt, k) => {
         let f = Math.floor(tt * 11) % 16;
         for (const [set, scale, sx, sy, kk] of [[caustA, 1.9, 14, 6, 1], [caustB, 1.3, -9, 11, 0.6]]) {
+          if (!set.length) continue;
           const c = set[f]; if (!c) continue;
           const pat = g.createPattern(c, 'repeat');
           pat.setTransform(new DOMMatrix().translate(tt * sx * sc0, tt * sy * sc0).scale(scale * sc0));
@@ -144,6 +147,17 @@ export async function playLogo(renderer, overlay, skipSignal) {
           else { g.globalAlpha = al; g.drawImage(logo, 0, sy, w, 4, X + dx, Y + sy * sc + Math.sin(t * 1.7 + sy * 0.02) * 1.5 * sc0, w * sc, 4 * sc); }
         }
         g.globalAlpha = 1;
+      } else {
+        // no logo picture (yet): the word drawn as text, same reveal and wobble
+        const al = Math.max(0, Math.min(1, (H / 2 - front - 30 * sc0) / (80 * sc0)));
+        if (al > 0) {
+          g.save(); g.translate(W / 2 + Math.sin(t * 2.3) * 3 * sc0, H / 2); g.rotate(-Math.sin(t * 1.3) * 0.6 * Math.PI / 180);
+          g.font = `900 ${Math.round(140 * sc0)}px "Arial Black", Roboto, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+          g.globalAlpha = 0.3 * al; g.fillStyle = '#000'; g.fillText('AMPLIN', 10 * sc0, 12 * sc0);
+          const tg = g.createLinearGradient(0, -70 * sc0, 0, 70 * sc0); tg.addColorStop(0, 'rgb(255,250,230)'); tg.addColorStop(1, 'rgb(170,230,240)');
+          g.globalAlpha = al; g.fillStyle = tg; g.fillText('AMPLIN', 0, 0);
+          g.restore(); g.globalAlpha = 1;
+        }
       }
       caust(t + 0.37, 0.16);
       // light from the top, darker corners
