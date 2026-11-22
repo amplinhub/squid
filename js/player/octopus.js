@@ -39,6 +39,7 @@ export function createOctopus(scene, world) {
   const pa = parts(4);
   const mk = (g) => { const m = new THREE.Mesh(g, tintMaterial(false)); m.matrixAutoUpdate = false; m.frustumCulled = false; scene.add(m); return m; };
   const mantle = mk(pa.mantle), patch = mk(pa.patch), head = mk(pa.head);
+  patch.material.transparent = true; patch.material.depthWrite = false; patch.renderOrder = 1;
   const NA = 8, NJ = 8;
   const segs = new THREE.InstancedMesh(pa.seg, tintMaterial(true), NA * NJ);
   const tintAttr = new THREE.InstancedBufferAttribute(new Float32Array(NA * NJ * 4), 4);
@@ -401,7 +402,9 @@ export function createOctopus(scene, world) {
     mantle.material.userData.tint.value.set(base[0], base[1], base[2], cam * 0.32);
     head.material.userData.tint.value.set(base[0], base[1], base[2], cam * 0.32);
     patch.visible = cam > 0.003 && mantle.visible;
-    patch.material.userData.tint.value.set(base[0], base[1], base[2], Math.min(1, cam * 1.15));
+    // the patches fade in already in the ground colour (never as white blotches)
+    patch.material.userData.tint.value.set(base[0], base[1], base[2], 1);
+    patch.material.opacity = Math.min(1, cam * 1.15);
     // arms: patches along them, slowly shifting; plants nearby lend some of them their colour
     let k = 0, rad;
     const tA = tintAttr.array;
