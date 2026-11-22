@@ -275,6 +275,46 @@ export function createAtmosphere(scene, camera, renderer) {
     surface.instanceMatrix.needsUpdate = true;
   }
 
+  // ---------------- glows of moving things (jellyfish bells, photophores, lures): one buffer refilled per frame
+  function dynamicGlow(max) {
+    const p = new Float32Array(max * 3), c = new Float32Array(max * 3), s = new Float32Array(max);
+    const g = new THREE.BufferGeometry();
+    const attr = (a, n) => { const b = new THREE.BufferAttribute(a, n); b.setUsage(THREE.DynamicDrawUsage); return b; };
+    g.setAttribute('position', attr(p, 3)); g.setAttribute('aColor', attr(c, 3)); g.setAttribute('aSize', attr(s, 1));
+    const m = new THREE.ShaderMaterial({
+      uniforms: { uTex: { value: softTex }, uPx: shared.uPx, uFogNear: shared.uFogNear, uFogFar: shared.uFogFar },
+      vertexShader: `attribute vec3 aColor; attribute float aSize; uniform float uPx, uFogNear, uFogFar; varying vec3 vCol;
+        void main() {
+          vec4 mv = modelViewMatrix * vec4(position, 1.0);
+          float d = max(1.0, -mv.z);
+          gl_PointSize = clamp(2.0 * aSize * uPx / d, 1.0, 512.0);
+          gl_Position = projectionMatrix * mv;
+          vCol = aColor * (1.0 - clamp((d - uFogNear) / (uFogFar - uFogNear), 0.0, 1.0));
+        }`,
+      fragmentShader: `uniform sampler2D uTex; varying vec3 vCol;
+        void main() { vec4 t = texture2D(uTex, gl_PointCoord); gl_FragColor = vec4(vCol * t.rgb * t.a, 1.0); }`,
+      blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, fog: false,
+    });
+    const pts = new THREE.Points(g, m);
+    pts.frustumCulled = false;
+    scene.add(pts);
+    let n = 0;
+    return {
+      begin() { n = 0; },
+      // game coordinates; colour 0..255 already multiplied by its alpha
+      add(x, y, z, r, gg, b, a, size) {
+        if (n >= max) return;
+        p[n * 3] = x; p[n * 3 + 1] = z; p[n * 3 + 2] = y;
+        c[n * 3] = r / 255 * a; c[n * 3 + 1] = gg / 255 * a; c[n * 3 + 2] = b / 255 * a;
+        s[n] = size; n++;
+      },
+      end() {
+        g.setDrawRange(0, n);
+        for (const k of ['position', 'aColor', 'aSize']) g.attributes[k].needsUpdate = true;
+      },
+    };
+  }
+
   // ---------------- per frame
   // cam: camera position in game units {x, y, z}; vd: view distance; gfx: 0 low (no caustics / snow /
   // shafts), 1, 2; t: game time in seconds
@@ -304,7 +344,7 @@ export function createAtmosphere(scene, camera, renderer) {
     updateSurface(t, cam, vd);
   }
 
-  return { uTime, ready, update, groundMaterial, glowMaterial, makeGlowPoints, waterColour: () => fogc };
+  return { uTime, ready, update, groundMaterial, glowMaterial, makeGlowPoints, dynamicGlow, waterColour: () => fogc };
 }
 
 export { clamp };

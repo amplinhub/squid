@@ -39,6 +39,7 @@ export class MeshBuilder {
   grow() {
     const g = (a) => { const b = new Float32Array(a.length * 2); b.set(a); return b; };
     this.pos = g(this.pos); this.col = g(this.col); if (this.up) this.up = g(this.up);
+    if (this.a) { const b = new Float32Array(this.pos.length / 3); b.fill(1); b.set(this.a); this.a = b; }
   }
 
   // placement for the following triangles (local -> world): offset, yaw in degrees, scale
@@ -111,6 +112,9 @@ export class MeshBuilder {
     p[o + 6] = x3; p[o + 7] = z3; p[o + 8] = y3;
     for (let k = 0; k < 9; k += 3) { c[o + k] = r; c[o + k + 1] = g; c[o + k + 2] = b; }
     if (this.up) { const u = Math.max(0, nz) ** 2, q = this.n * 3; this.up[q] = u; this.up[q + 1] = u; this.up[q + 2] = u; }
+    // vertex alpha (jellyfish, fins): the alpha channel exists only once something is see-through
+    if (this.alpha < 1 && !this.a) { this.a = new Float32Array(this.pos.length / 3); this.a.fill(1); }
+    if (this.a) { const q = this.n * 3; this.a[q] = this.alpha; this.a[q + 1] = this.alpha; this.a[q + 2] = this.alpha; }
     this.n++;
   }
 
@@ -192,7 +196,12 @@ export class MeshBuilder {
     if (this.n === 0) return null;
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.BufferAttribute(this.pos.slice(0, this.n * 9), 3));
-    g.setAttribute('color', new THREE.BufferAttribute(this.col.slice(0, this.n * 9), 3));
+    if (this.a) {
+      const n = this.n * 3, c4 = new Float32Array(n * 4);
+      for (let i = 0; i < n; i++) { c4[i * 4] = this.col[i * 3]; c4[i * 4 + 1] = this.col[i * 3 + 1]; c4[i * 4 + 2] = this.col[i * 3 + 2]; c4[i * 4 + 3] = this.a[i]; }
+      g.setAttribute('color', new THREE.BufferAttribute(c4, 4));
+      g.userData.alpha = true;
+    } else g.setAttribute('color', new THREE.BufferAttribute(this.col.slice(0, this.n * 9), 3));
     if (this.up) g.setAttribute('aUp', new THREE.BufferAttribute(this.up.slice(0, this.n * 3), 1));
     g.computeBoundingSphere();
     return g;

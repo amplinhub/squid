@@ -2,7 +2,7 @@
 // Elements with data-i18n="key" get their text replaced; t(key) is used from code.
 const DICT = {
   ru: {
-    loading: 'Загрузка…', load_scene: 'Морское дно', load_done: 'Готово',
+    loading: 'Загрузка…', load_scene: 'Морское дно', load_creatures: 'Обитатели моря', load_done: 'Готово',
     hint_keys: 'W — плыть · A/D — поворот · ↑/↓ — всплыть/нырнуть · Shift — рывок · F — способность · Esc — пауза',
     hint_touch: 'Стик — поворот и глубина · «Плыть», «Рывок», «Способность» — справа',
     btn_swim: 'Плыть', btn_boost: 'Рывок', btn_ability: 'Способ­ность',
@@ -10,7 +10,7 @@ const DICT = {
     q_auto: 'Авто', q_low: 'Низкое', q_mid: 'Среднее', q_high: 'Высокое',
   },
   en: {
-    loading: 'Loading…', load_scene: 'Seabed', load_done: 'Ready',
+    loading: 'Loading…', load_scene: 'Seabed', load_creatures: 'Sea creatures', load_done: 'Ready',
     hint_keys: 'W — swim · A/D — turn · ↑/↓ — rise/dive · Shift — dash · F — ability · Esc — pause',
     hint_touch: 'Stick — turn and depth · Swim, Dash, Ability — on the right',
     btn_swim: 'Swim', btn_boost: 'Dash', btn_ability: 'Ability',

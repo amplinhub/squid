@@ -1,5 +1,5 @@
-// GROW UP - web version. Stage 1: the streaming seabed world of the original with its atmosphere,
-// the player squid of the original, chase camera of the original.
+// GROW UP - web version. The streaming seabed world of the original with its atmosphere, the player
+// squid, the chase camera and the creatures of the original (species, models, behaviour, spawning).
 import * as THREE from 'three';
 import { startLoop } from './core/loop.js';
 import { initInput, pollInput, input } from './core/input.js';
@@ -10,6 +10,7 @@ import { createAtmosphere } from './render/atmosphere.js';
 import { createWorld } from './world/world.js';
 import { setWorldSeed, worldSeed, findSpawn, terrainH, biomeAt, depthM, SURF_Z, clamp } from './world/terrain.js';
 import { createPlayer } from './player/player.js';
+import { createCreatures, buildModelsStep } from './creatures/creatures.js';
 
 const $ = (id) => document.getElementById(id);
 const setLoad = (k, key) => { $('load-fill').style.width = Math.round(k * 100) + '%'; if (key) $('load-text').textContent = t(key); };
@@ -25,6 +26,11 @@ const world = createWorld(scene, atmo);
 const player = createPlayer(scene, findSpawn());
 const pl = player.pl;
 const D = Math.PI / 180;
+// what the creatures see of the player (stage 4 adds hiding, death etc.)
+const creatures = createCreatures(scene, world, atmo, {
+  view: world.view,
+  player: () => ({ x: pl.x, y: pl.y, z: pl.z, vx: pl.vx, vy: pl.vy, vz: pl.vz, L: pl.L, tv: pl.tv, alive: true, vis: 1, hidden: false }),
+});
 
 // ---------- interface ----------
 const isTouch = matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
@@ -86,7 +92,9 @@ function updateCamera(a, dt) {
 
 // ---------- loading: the world around the spawn is built before the game shows ----------
 async function load() {
-  setLoad(0.1, 'load_scene');
+  setLoad(0.05, 'load_creatures');
+  for (let k = 0; k < 1;) { const t0 = performance.now(); while (k < 1 && performance.now() - t0 < 30) k = buildModelsStep(); setLoad(0.05 + 0.35 * k); await nextFrame(); }
+  setLoad(0.4, 'load_scene');
   const s = player.pos(1);
   world.setView(viewDist());
   world.update(s.x, s.y, 0);
@@ -95,11 +103,12 @@ async function load() {
     world.update(s.x, s.y, 25);
     const n = world.pendingNear(s.x, s.y);
     total = Math.max(total, n);
-    setLoad(0.1 + 0.85 * (total ? 1 - n / total : 1));
+    setLoad(0.4 + 0.55 * (total ? 1 - n / total : 1));
     if (n === 0) break;
     await nextFrame();
   }
   await Promise.race([atmo.ready, new Promise((r) => setTimeout(r, 3000))]);
+  creatures.endInitialSpawn();
   setLoad(1, 'load_done');
 }
 
@@ -117,6 +126,7 @@ function frame(a, dt) {
   world.setView(vd);
   world.update(p.x, p.y, quality().buildMs);
   world.visibility(cam.x, cam.y);
+  creatures.render(ia, cam, time);
   atmo.update(time, cam, vd, quality().gfx);
   renderer.render(scene, camera);
 
@@ -136,7 +146,7 @@ function frame(a, dt) {
 }
 
 // handle for automated checks in the browser console (no effect on the game)
-window.__gu = { player, world, atmo, camera, renderer, cam };
+window.__gu = { player, world, atmo, camera, renderer, cam, creatures };
 
 load().then(() => {
   startLoop(
@@ -146,6 +156,7 @@ load().then(() => {
       if (paused) return;
       time += dt;
       player.step(inp, time);
+      creatures.update(time);
     },
     frame,
   );

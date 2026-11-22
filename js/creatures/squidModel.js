@@ -14,11 +14,15 @@ export function squidPalette(p) {
   switch (p) {
     case 0: return { body: rgb(232, 98, 70), belly: rgb(252, 204, 178), spot: rgb(150, 40, 42), arm: rgb(206, 96, 74), under: rgb(248, 206, 188), fin: rgb(226, 120, 96), eye: rgb(242, 206, 84) };
     case 1: return { body: rgb(252, 196, 178), belly: rgb(255, 236, 222), spot: rgb(240, 146, 124), arm: rgb(250, 186, 166), under: rgb(255, 236, 226), fin: rgb(255, 206, 186), eye: rgb(242, 206, 84) };
+    case 3: return { body: rgb(176, 84, 58), belly: rgb(226, 156, 124), spot: rgb(120, 50, 36), arm: rgb(184, 92, 66), under: rgb(244, 204, 182), fin: rgb(184, 92, 66), eye: rgb(232, 204, 120) };
     default: return { body: rgb(140, 28, 46), belly: rgb(196, 110, 112), spot: rgb(84, 10, 24), arm: rgb(150, 36, 52), under: rgb(222, 150, 150), fin: rgb(166, 44, 62), eye: rgb(205, 236, 140) };
   }
 }
 
 // mantle radius at s (0 collar .. 1 tip)
+// octopus mantle radius: a big round sac behind the head
+const octR = (s) => 0.36 * Math.sqrt(Math.max(0, Math.sin(Math.PI * (0.12 + 0.88 * Math.max(0, Math.min(1, s))))));
+
 function sqR(s) {
   s = Math.max(0, Math.min(1, s));
   if (s < 0.3) return lerp(0.15, 0.19, s / 0.3);
@@ -32,13 +36,15 @@ function buildParts(p) {
   // mantle
   let b = new MeshBuilder(makeRng(500 + p), 256);
   for (let i = 0; i < NS; i++) {
-    const s0 = i / NS, s1 = (i + 1) / NS, r0 = sqR(s0), r1 = sqR(s1);
+    let s0 = i / NS, s1 = (i + 1) / NS, r0 = sqR(s0), r1 = sqR(s1);
+    if (p >= 3) { r0 = octR(s0); r1 = octR(s1); s0 *= 0.75; s1 *= 0.75; }      // octopus: round sac
     b.ref(-(s0 + s1) / 2, 0, 0);
     for (let k = 0; k < K; k++) {
       const th0 = k * 2 * Math.PI / K, th1 = (k + 1) * 2 * Math.PI / K, zr = Math.cos((k + 0.5) * 2 * Math.PI / K);
       let col = merge(c.belly, c.body, smoothstep(-0.45, 0.35, zr));
       const h = hash2(i * 11 + k, p * 7 + 3);
       if (h < 0.2 && zr > -0.3) col = c.spot;
+      if (p === 3 && h > 0.75) col = merge(col, c.belly, 0.4);
       if (i === 0) col = merge(col, c.belly, 0.35);
       b.quad(-s0, Math.sin(th0) * r0, Math.cos(th0) * r0 * 0.92, -s0, Math.sin(th1) * r0, Math.cos(th1) * r0 * 0.92,
              -s1, Math.sin(th1) * r1, Math.cos(th1) * r1 * 0.92, -s1, Math.sin(th0) * r1, Math.cos(th0) * r1 * 0.92, col);
@@ -116,7 +122,8 @@ const norm = (a) => { const l = Math.hypot(a[0], a[1], a[2]) || 1; return [a[0] 
 
 // A squid rig. State in game units / radians: x, y, z, yaw (forward = cos yaw, -sin yaw), pitch (> 0 nose
 // up), roll; L total length; spread 0..1 (arm crown opening); tent 0..1 with target tx, ty, tz.
-export function createSquidRig(scene, palette = 0) {
+// oct: octopus mode (8 long arms, no tentacles, swims mantle-first, no fins)
+export function createSquidRig(scene, palette = 0, oct = false) {
   const flashPal = palette === 0 ? 1 : palette;
   const pa = parts(palette), pb = parts(flashPal);
   const group = new THREE.Group();
@@ -131,7 +138,7 @@ export function createSquidRig(scene, palette = 0) {
   function init() {
     const ML = s.L / 2.1;
     for (let a = 0; a < 10; a++) {
-      n[a] = a >= 8 ? 7 : 5;
+      n[a] = oct ? (a >= 8 ? 0 : 6) : (a >= 8 ? 7 : 5);
       for (let i = 0; i <= n[a]; i++) {
         ax[a * 10 + i] = Math.cos(s.yaw) * ML * (0.21 + i * 0.18);
         ay[a * 10 + i] = -Math.sin(s.yaw) * ML * (0.21 + i * 0.18);
@@ -142,7 +149,8 @@ export function createSquidRig(scene, palette = 0) {
 
   // body axes (rolled), as scr_squid_anim builds them
   const axes = () => {
-    const cy = Math.cos(s.yaw), sy = Math.sin(s.yaw), cp = Math.cos(s.pitch), sp = Math.sin(s.pitch), cr = Math.cos(s.roll), sr = Math.sin(s.roll);
+    const yaw = oct ? s.yaw + Math.PI : s.yaw, pitch = oct ? -s.pitch : s.pitch;        // octopus: mantle first
+    const cy = Math.cos(yaw), sy = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch), cr = Math.cos(s.roll), sr = Math.sin(s.roll);
     const f = [cp * cy, -cp * sy, sp];
     const r0 = [sy, cy, 0], u0 = [-sp * cy, sp * sy, cp];
     const r = [r0[0] * cr - u0[0] * sr, r0[1] * cr - u0[1] * sr, -u0[2] * sr];
@@ -166,7 +174,7 @@ export function createSquidRig(scene, palette = 0) {
       if (!isT) {
         const k = 0.1 + spread * 0.95;
         dx = f[0] + ox * k; dy = f[1] + oy * k; dz = f[2] + oz * k;
-        seg = ML * 0.18 * (1 - 0.12 * spread); follow = 0.33;
+        seg = oct ? ML * 0.27 : ML * 0.18 * (1 - 0.12 * spread); follow = 0.33;
       } else {
         dx = f[0] + ox * 0.07 - u[0] * 0.05; dy = f[1] + oy * 0.07 - u[1] * 0.05; dz = f[2] + oz * 0.07 - u[2] * 0.05;
         seg = ML * (0.17 + 0.17 * s.tent); follow = 0.45 + s.tent * 0.4;
@@ -200,6 +208,7 @@ export function createSquidRig(scene, palette = 0) {
     const pp = flash ? pb : pa;
     if (mantle.geometry !== pp.mantle) { mantle.geometry = pp.mantle; head.geometry = pp.head; segs.geometry = pp.seg; clubs.geometry = pp.club; }
     fin.geometry = pp.fins[Math.floor(s.fin) % 8];
+    fin.visible = !oct && mantle.visible;
     const ML = s.L / 2.1, pul = Math.sin(s.pulse), { f, r, u } = axes();
     // local y axis completes a right-handed frame with forward and up
     const Y = cross(u, f);
@@ -208,8 +217,9 @@ export function createSquidRig(scene, palette = 0) {
     setBasis(head.matrix, x, y, z, f, Y, u, ML, ML, ML);
     let k = 0;
     for (let a = 0; a < 10; a++) {
-      let rad = a < 8 ? 0.044 * ML : 0.024 * ML;
-      const tap = a < 8 ? 0.8 : 0.9;
+      if (!n[a]) continue;
+      let rad = oct ? 0.075 * ML : a < 8 ? 0.044 * ML : 0.024 * ML;
+      const tap = oct ? 0.78 : a < 8 ? 0.8 : 0.9;
       for (let i = 0; i < n[a]; i++) {
         const i0 = a * 10 + i, i1 = i0 + 1;
         const d = [ax[i1] - ax[i0], ay[i1] - ay[i0], az[i1] - az[i0]], l = Math.hypot(d[0], d[1], d[2]);
@@ -232,8 +242,10 @@ export function createSquidRig(scene, palette = 0) {
     segs.count = k;
     segs.instanceMatrix.needsUpdate = true;
     clubs.instanceMatrix.needsUpdate = true;
+    clubs.visible = !oct && mantle.visible;
   }
 
   function setVisible(v) { for (const m of [mantle, head, fin, segs, clubs]) m.visible = v; }
-  return { s, init, anim, draw, setVisible };
+  function remove() { for (const m of [mantle, head, fin, segs, clubs]) scene.remove(m); segs.dispose(); clubs.dispose(); }
+  return { s, init, anim, draw, setVisible, remove };
 }

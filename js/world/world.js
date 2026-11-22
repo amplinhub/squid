@@ -10,6 +10,8 @@ import { pickDecor, buildItem } from './decor.js';
 import { createKelpKit, makeKelpMeshes } from './kelp.js';
 
 const MAX_CHUNKS = 140;
+// obstacle radius of decor types for walking crabs (scr_crab_blocked)
+const BLOCK_R = { 0: 30, 1: 30, 2: 22, 3: 22, 4: 22, 5: 22, 9: 22, 8: 14, 11: 14, 12: 80, 13: 16, 14: 18 };
 
 // ---- seabed face colour (scr_ground_tri)
 const C = {
@@ -45,6 +47,7 @@ export function createWorld(scene, atmo) {
   let pcx = -99999, pcy = -99999, frame = 0;
   const stats = { loaded: 0, pending: 0, buildMs: 0 };
   const view = { dist: 850, loadR: 0, unloadR: 0 };
+  const hooks = {};
 
   function setView(viewDist) {
     view.dist = viewDist;
@@ -124,10 +127,12 @@ export function createWorld(scene, atmo) {
       c.vents.push({ x: px, y: py, z: pz, per: 6 + R.irandom(10), p: R.irandom(20) });
       c.items.push({ t: 15, x: px, y: py, z: pz, bio, s: 0.8, r: 0, seed: Math.floor(R.random(999999)) });
     }
+    c.kelpList = kelp;
     c.kelp = makeKelpMeshes(kelpKit, kelp);
     for (const m of c.kelp) scene.add(m);
     c.stage = c.items.length ? 1 : 2;
     if (c.stage === 2) finishDecor(c);
+    hooks.onChunkReady?.(c);          // first population of the chunk (creatures)
   }
 
   function finishDecor(c) {
@@ -221,7 +226,21 @@ export function createWorld(scene, atmo) {
   }
 
   return {
-    stats, view, setView,
+    stats, view, setView, hooks,
+    chunks: () => list,
+    // a rock, coral, urchin, kelp stem or skeleton at this point of the seabed? (crabs walk round them)
+    blockedAt(px, py, size) {
+      const c = chunks.get(Math.floor(px / CS) + "," + Math.floor(py / CS));
+      if (!c || c.stage === 0) return false;
+      const rr = size * 0.5;
+      for (const it of c.items) {
+        const r = BLOCK_R[it.t] ?? -1;
+        if (r > 0 && Math.hypot(px - it.x, py - it.y) < r * it.s + rr) return true;
+      }
+      const k = c.kelpList || [];
+      for (let i = 0; i < k.length; i += 7) if (Math.hypot(px - k[i + 1], py - k[i + 2]) < 14 + rr) return true;
+      return false;
+    },
     chunkCount: () => list.length,
     // x, y: player position (game units); budgetMs: generation time this frame
     update(x, y, budgetMs) {
