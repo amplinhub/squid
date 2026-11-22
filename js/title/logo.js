@@ -113,10 +113,14 @@ export async function playLogo(renderer, overlay, skipSignal) {
       last = now;
       const W = overlay.width = innerWidth, H = overlay.height = innerHeight;
       cam.aspect = W / H; cam.updateProjectionMatrix();
-      placeStar(stars[0], 70, 18 + Math.sin(t * 0.7) * 1.5, -330, 150);
-      placeStar(stars[1], 46, -40, 420, -170);
+      // (the axis swap mirrors the view: these places put the stars where the original shows them)
+      placeStar(stars[0], 70, 18 + Math.sin(t * 0.7) * 1.5, 330, -150);
+      placeStar(stars[1], 46, -40, -420, 170);
       renderer.setClearColor(0x000000, 1);
       renderer.render(scene, cam);
+      // everything 2D is composited onto a copy of the 3D picture (additive effects need it underneath)
+      g.globalCompositeOperation = "source-over"; g.globalAlpha = 1;
+      g.drawImage(renderer.domElement, 0, 0, W, H);
       // 2D: water tint, caustics, logo, light, vignette, bubbles, fades
       const sc0 = Math.min(W / W0, H / H0), front = H + 80 * sc0 - (t - 0.3) * 950 * sc0;
       g.globalAlpha = 0.34;
