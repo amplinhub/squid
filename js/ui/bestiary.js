@@ -21,16 +21,20 @@ export function createBestiary(renderer, known, onClose) {
   try { seen = new Set(JSON.parse(localStorage.getItem(SKEY) || '[]')); } catch (e) { /* fresh */ }
   const saveSeen = () => { try { localStorage.setItem(SKEY, JSON.stringify([...seen])); } catch (e) { /* not kept */ } };
 
-  // 3D: one mesh per species (geometry swapped as it animates), two procedural rigs
+  // 3D: one mesh per species (geometry swapped as it animates), two procedural rigs; built on the first
+  // opening (the creature models are ready by then)
   const scene = new THREE.Scene();
   const meshes = [];
-  for (let k = 0; k < NTYPES; k++) {
-    const kind = SPECIES[k].kind;
-    if (kind === 4 || kind === 8) { meshes[k] = createSquidRig(scene, kind === 4 ? 2 : 3, kind === 8); meshes[k].s.L = 1; meshes[k].init(); meshes[k].setVisible(false); continue; }
-    const g = creatureFrame(k, 0, false, false);
-    const m = new THREE.Mesh(g, creatureMaterial(g));
-    m.matrixAutoUpdate = false; m.visible = false; m.frustumCulled = false;
-    scene.add(m); meshes[k] = m;
+  function build() {
+    if (meshes.length) return;
+    for (let k = 0; k < NTYPES; k++) {
+      const kind = SPECIES[k].kind;
+      if (kind === 4 || kind === 8) { meshes[k] = createSquidRig(scene, kind === 4 ? 2 : 3, kind === 8); meshes[k].s.L = 1; meshes[k].init(); meshes[k].setVisible(false); continue; }
+      const g = creatureFrame(k, 0, false, false);
+      const m = new THREE.Mesh(g, creatureMaterial(g));
+      m.matrixAutoUpdate = false; m.visible = false; m.frustumCulled = false;
+      scene.add(m); meshes[k] = m;
+    }
   }
   const cam = new THREE.PerspectiveCamera(30, 1, 10, 4000);
   cam.position.set(0, 0, 1000); cam.lookAt(0, 0, 0);
@@ -84,6 +88,7 @@ export function createBestiary(renderer, known, onClose) {
   }
 
   function show() {
+    build();
     active = true; root.hidden = false; sel = -1; detail.hidden = true;
     // species found since the last visit turn over one after another
     newN = 0;
