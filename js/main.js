@@ -1,5 +1,5 @@
 // GROW UP - web version. Stage 1: the streaming seabed world of the original with its atmosphere,
-// placeholder squid, chase camera of the original.
+// the player squid of the original, chase camera of the original.
 import * as THREE from 'three';
 import { startLoop } from './core/loop.js';
 import { initInput, pollInput, input } from './core/input.js';
@@ -9,7 +9,7 @@ import { createRenderer } from './render/renderer.js';
 import { createAtmosphere } from './render/atmosphere.js';
 import { createWorld } from './world/world.js';
 import { setWorldSeed, worldSeed, findSpawn, terrainH, biomeAt, depthM, SURF_Z, clamp } from './world/terrain.js';
-import { createProtoSquid } from './player/proto.js';
+import { createPlayer } from './player/player.js';
 
 const $ = (id) => document.getElementById(id);
 const setLoad = (k, key) => { $('load-fill').style.width = Math.round(k * 100) + '%'; if (key) $('load-text').textContent = t(key); };
@@ -22,7 +22,9 @@ const { renderer, scene, camera } = createRenderer($('game'));
 const atmo = createAtmosphere(scene, camera, renderer);
 setWorldSeed(Math.floor(Math.random() * 100001));
 const world = createWorld(scene, atmo);
-const squid = createProtoSquid(scene, findSpawn());
+const player = createPlayer(scene, findSpawn());
+const pl = player.pl;
+const D = Math.PI / 180;
 
 // ---------- interface ----------
 const isTouch = matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
@@ -52,13 +54,13 @@ $('sel-quality').addEventListener('change', (e) => setQualityMode(e.target.value
 document.addEventListener('visibilitychange', () => { if (document.hidden) setPaused(true); });
 
 // ---------- view range and chase camera (scr_view_update, scr_camera_step) ----------
-const viewDist = () => clamp(810 + squid.L * 4, 850, 2700) * quality().viewMult;
-const cam = { x: 0, y: 0, z: 0, yaw: squid.yaw, fov: 64, init: false };
+const viewDist = () => clamp(810 + pl.L * 4, 850, 2700) * quality().viewMult;
+const cam = { x: 0, y: 0, z: 0, yaw: pl.yaw * D, fov: 64, init: false };
 const look = new THREE.Vector3();
 const angDiff = (a, b) => { let d = a - b; while (d > Math.PI) d -= 2 * Math.PI; while (d <= -Math.PI) d += 2 * Math.PI; return d; };
 
 function updateCamera(a, dt) {
-  const p = squid.renderPos(a), yaw = squid.renderYaw(a), pitch = squid.renderPitch(a), L = squid.L;
+  const p = player.pos(a), yaw = pl.yaw * D, pitch = pl.pitch * D, L = pl.L;
   const steps = dt * 60;                              // the original smoothed per 1/60 s step
   cam.yaw += angDiff(yaw, cam.yaw) * (1 - Math.pow(1 - 0.075, steps));
   const dist = 28 + L * 1.85, hgt = 8 + L * 0.5, cp = Math.cos(pitch * 0.5);
@@ -72,7 +74,7 @@ function updateCamera(a, dt) {
   camera.position.set(cam.x, cam.z, cam.y);
   camera.lookAt(look.set(tx, tz, ty));
   // vertical field of view of the original in landscape; in portrait it widens so the sides are not lost
-  cam.fov += (62 + (squid.speed > 300 ? 11 : 0) - cam.fov) * (1 - Math.pow(1 - 0.08, steps));
+  cam.fov += (62 + pl.boost * 11 - cam.fov) * (1 - Math.pow(1 - 0.08, steps));
   const aspect = camera.aspect, vd = viewDist();
   const fov = aspect >= 1 ? cam.fov : 2 * Math.atan(Math.tan(cam.fov * Math.PI / 360) / Math.max(aspect, 0.75)) * 180 / Math.PI;
   camera.fov = fov;
@@ -85,7 +87,7 @@ function updateCamera(a, dt) {
 // ---------- loading: the world around the spawn is built before the game shows ----------
 async function load() {
   setLoad(0.1, 'load_scene');
-  const s = squid.renderPos(1);
+  const s = player.pos(1);
   world.setView(viewDist());
   world.update(s.x, s.y, 0);
   let total = 0;
@@ -109,9 +111,9 @@ const BIOMES = ['sand', 'reef', 'kelp', 'abyss'];
 function frame(a, dt) {
   if (!paused) qualityTick(dt);
   const ia = paused ? 1 : a;
-  squid.render(ia);
+  player.render(ia, time);
   const vd = updateCamera(ia, paused ? 0 : dt);
-  const p = squid.renderPos(ia);
+  const p = player.pos(ia);
   world.setView(vd);
   world.update(p.x, p.y, quality().buildMs);
   world.visibility(cam.x, cam.y);
@@ -129,12 +131,12 @@ function frame(a, dt) {
       `draw ${info.calls}  tri ${info.triangles}\n` +
       `chunks ${st.loaded}  build ${st.pending}  ${st.buildMs.toFixed(1)} ms\n` +
       `depth ${Math.round(depthM(p.z))} m  bottom ${Math.round(depthM(h))} m  ${BIOMES[biomeAt(p.x, p.y, h)]}\n` +
-      `seed ${worldSeed()}  v ${Math.round(squid.speed)}` + (input.touch ? '  touch' : '');
+      `seed ${worldSeed()}  v ${pl.spd.toFixed(2)}  st ${Math.round(pl.st)}${pl.exh ? "!" : ""}  L ${pl.L.toFixed(0)}` + (input.touch ? '  touch' : '');
   }
 }
 
 // handle for automated checks in the browser console (no effect on the game)
-window.__gu = { squid, world, atmo, camera, renderer, cam };
+window.__gu = { player, world, atmo, camera, renderer, cam };
 
 load().then(() => {
   startLoop(
@@ -143,7 +145,7 @@ load().then(() => {
       if (inp.pauseHit) setPaused(!paused);
       if (paused) return;
       time += dt;
-      squid.step(dt, inp);
+      player.step(inp, time);
     },
     frame,
   );
