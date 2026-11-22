@@ -54,7 +54,7 @@ export function buildModelsStep() {
 
 // game-space basis -> three matrix (same convention as the squid rig)
 const gm = new THREE.Matrix4();
-function setTransform(out, x, y, z, yaw, pitch, roll, sx, sy, sz) {
+export function setTransform(out, x, y, z, yaw, pitch, roll, sx, sy, sz) {
   const cy = Math.cos(yaw), sy0 = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch), cr = Math.cos(roll), sr = Math.sin(roll);
   const f = [cp * cy, -cp * sy0, sp], r0 = [sy0, cy, 0], u0 = [-sp * cy, sp * sy0, cp];
   const r = [r0[0] * cr - u0[0] * sr, r0[1] * cr - u0[1] * sr, -u0[2] * sr];
@@ -184,6 +184,7 @@ export function createCreatures(scene, world, atmo, env) {
   function destroy(c) {
     c.dead = true;
     if (c.mesh) scene.remove(c.mesh);
+    if (c.sil) { scene.remove(c.sil); c.sil.material.dispose(); }
     if (c.rig) c.rig.remove();
   }
 
@@ -446,7 +447,8 @@ export function createCreatures(scene, world, atmo, env) {
   }
 
   // ---------------- drawing (a: interpolation between steps)
-  function render(a, cam, time) {
+  // pl: { x, y, z, L, lock, alive } - for the red silhouettes of edible prey
+  function render(a, cam, time, pl) {
     const vd = env.view.dist;
     let drawn = 0;
     glow.begin();
@@ -460,6 +462,22 @@ export function createCreatures(scene, world, atmo, env) {
         continue;
       }
       c.mesh.visible = near;
+      // red silhouette of edible prey: drawn over everything (seen through kelp, rocks and murk), never
+      // smaller than ~2 degrees, strong far away, fading out as the prey comes close
+      let silA = 0;
+      if (near && pl.alive && !c.grabbed && s.kind !== 2 && edibleBy(c, pl.L)) {
+        const d = Math.hypot(x - pl.x, y - pl.y, z - pl.z), nearD = pl.L * 2.5, span = pl.L * 5 + 160;
+        silA = clamp((d - nearD) / span, 0, 1) * 0.7;
+        if (c === pl.lock) silA = Math.max(silA, 0.25) * (0.8 + 0.2 * Math.sin(time * 8));
+        if (silA > 0.02) {
+          if (!c.sil) { c.sil = new THREE.Mesh(c.mesh.geometry, new THREE.MeshBasicMaterial({ color: 0xff2828, transparent: true, depthTest: false, depthWrite: false, fog: false, side: THREE.DoubleSide })); c.sil.matrixAutoUpdate = false; c.sil.renderOrder = 20; scene.add(c.sil); }
+          c.sil.material.opacity = silA;
+          const ss = Math.max(c.len * 1.15 * (1 + c.inflate * 0.6), d * 0.035);
+          c.sil.geometry = models[c.t].frames[0][Math.floor(c.ph) % FLIP];
+          setTransform(c.sil.matrix, x, y, z, c.yaw * D, c.pitch * D, c.roll * D, ss, ss * 1.3, ss * 1.3);
+        }
+      }
+      if (c.sil) c.sil.visible = silA > 0.02;
       if (!near) continue;
       drawn++;
       const m = models[c.t], f = Math.floor(c.ph) % FLIP;
@@ -490,8 +508,11 @@ export function createCreatures(scene, world, atmo, env) {
     list, stats, hooks, update, render,
     // for tests and the bestiary later: put one creature of species t at (x, y, z)
     spawn: (t, x, y, z) => create(t, x, y, z, null),
+    remove: (c) => destroy(c),
     edibleBy, dangerTo,
     endInitialSpawn() { initialSpawn = false; },
+    // a new life: the loaded chunks get their first population again
+    startSpawn() { for (const ch of world.chunks()) if (ch.stage > 0) spawnInChunk(ch, 1 + irandom(2)); },
     clear() { for (const c of list) destroy(c); list.length = 0; },
   };
 }

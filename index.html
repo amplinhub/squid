@@ -19,8 +19,18 @@
 </div>
 
 <!-- HUD (stage 0: only a debug line and buttons) -->
+<div id="hurt"></div>
 <div id="hud" hidden>
-  <div id="debug" class="panel"></div>
+  <!-- temporary status panel (the full HUD comes with stage 7) -->
+  <div id="status" class="panel">
+    <div id="stat-size" class="st-title"></div>
+    <div class="bar"><div id="bar-hp" class="fill hp"></div></div>
+    <div class="bar"><div id="bar-st" class="fill st"></div></div>
+    <div class="bar"><div id="bar-food" class="fill food"></div></div>
+    <div class="st-row"><span id="stat-score"></span><span id="stat-depth"></span></div>
+  </div>
+  <div id="msgs"></div>
+  <div id="debug"></div>
   <div class="top-right">
     <button id="btn-lang" class="icon-btn" aria-label="language">RU</button>
     <button id="btn-pause" class="icon-btn" aria-label="pause">II</button>
@@ -35,6 +45,16 @@
     <button id="btn-ability" class="tbtn small" data-i18n="btn_ability">Способность</button>
     <button id="btn-boost" class="tbtn" data-i18n="btn_boost">Рывок</button>
     <button id="btn-swim" class="tbtn big" data-i18n="btn_swim">Плыть</button>
+  </div>
+</div>
+
+<!-- death -->
+<div id="dead" class="screen dim" hidden>
+  <div class="panel menu">
+    <h1 data-i18n="dead_title">Кальмар погиб</h1>
+    <div id="dead-cause" class="dead-cause"></div>
+    <div id="dead-stats" class="dead-stats"></div>
+    <button id="btn-again" class="menu-btn" data-i18n="again">Ещё раз</button>
   </div>
 </div>
 
