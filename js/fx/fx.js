@@ -72,7 +72,8 @@ function makePoints(scene, tex, max) {
   const at = (a, n) => { const b = new THREE.BufferAttribute(a, n); b.setUsage(THREE.DynamicDrawUsage); return b; };
   g.setAttribute('position', at(p, 3)); g.setAttribute('aColor', at(c, 4)); g.setAttribute('aSize', at(s, 1));
   const m = new THREE.ShaderMaterial({
-    uniforms: THREE.UniformsUtils.merge([THREE.UniformsLib.fog, { uTex: { value: tex }, uPx: { value: 500 } }]),
+    // (the texture is added after the merge: merging would clone it before its image has loaded)
+    uniforms: Object.assign(THREE.UniformsUtils.merge([THREE.UniformsLib.fog, { uPx: { value: 500 } }]), { uTex: { value: tex } }),
     vertexShader: `attribute vec4 aColor; attribute float aSize; uniform float uPx; varying vec4 vCol;
       #include <fog_pars_vertex>
       void main() {
