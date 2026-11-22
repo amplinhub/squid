@@ -34,7 +34,7 @@ export function initInput(onTouchDetected) {
   const radius = () => base.offsetWidth * 0.5;
   zone.addEventListener('pointerdown', (e) => {
     if (stick.id !== null) return;
-    stick.id = e.pointerId; zone.setPointerCapture(e.pointerId);
+    stick.id = e.pointerId; try { zone.setPointerCapture(e.pointerId); } catch (err) { /* pointer already gone */ }
     // the stick appears under the thumb
     base.style.left = e.clientX + 'px'; base.style.top = e.clientY + 'px';
     base.classList.add('active');
@@ -60,7 +60,7 @@ export function initInput(onTouchDetected) {
 
   const holdButton = (id, field) => {
     const el = document.getElementById(id);
-    const on = (e) => { e.preventDefault(); held[field] = true; el.classList.add('on'); el.setPointerCapture?.(e.pointerId); };
+    const on = (e) => { e.preventDefault(); held[field] = true; el.classList.add('on'); try { el.setPointerCapture(e.pointerId); } catch (err) { /* pointer already gone */ } };
     const off = () => { held[field] = false; el.classList.remove('on'); };
     el.addEventListener('pointerdown', on);
     el.addEventListener('pointerup', off);
