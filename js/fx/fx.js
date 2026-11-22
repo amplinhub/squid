@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import { MeshBuilder, rgb } from '../mesh/builder.js';
 import { SURF_Z, CS, terrainH, makeRng, clamp } from '../world/terrain.js';
 import { setTransform } from '../creatures/creatures.js';
+import { loadTexture } from '../core/images.js';
 
 const rnd = Math.random, range = (a, b) => a + rnd() * (b - a), irandom = (n) => Math.floor(rnd() * (n + 1));
 const approach = (v, t, s) => (v < t ? Math.min(v + s, t) : Math.max(v - s, t));
@@ -114,7 +115,7 @@ function makePoints(scene, tex, max) {
 //        view: world.view, chunks: () => world chunks, gfx: () => 0..2 }
 export function createFx(scene, env) {
   const models = buildModels();
-  const loader = new THREE.TextureLoader();
+  const loader = { load: loadTexture };
   const puffs = makePoints(scene, loader.load('assets/tex/soft.png'), MAXP);
   const bubbles = makePoints(scene, loader.load('assets/tex/bubble.png'), MAXP);
   const parts = [], bones = [], inks = [];

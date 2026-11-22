@@ -7,7 +7,7 @@
 import * as THREE from 'three';
 import { SURF_Z } from '../world/terrain.js';
 
-const img = (src) => new Promise((res) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = src; });
+import { loadImage as img } from '../core/images.js';
 function tinted(im, col) {
   const c = document.createElement('canvas'); c.width = im.width; c.height = im.height;
   const g = c.getContext('2d');

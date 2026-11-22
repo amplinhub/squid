@@ -7,7 +7,7 @@ import { MeshBuilder, rgb, merge, mul } from '../mesh/builder.js';
 import { makeRng } from '../world/terrain.js';
 import { P } from '../mesh/xform.js';
 
-const img = (src) => new Promise((res) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = src; });
+import { loadImage as img } from '../core/images.js';
 // an image multiplied by a colour (canvas 2D has no tinting)
 function tinted(im, col) {
   const c = document.createElement('canvas'); c.width = im.width; c.height = im.height;

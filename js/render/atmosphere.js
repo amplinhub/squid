@@ -7,6 +7,7 @@
 //  * caustics are computed in the seabed shader (16-frame texture array) - no second pass of the seabed.
 import * as THREE from 'three';
 import { SURF_Z, depthT, hash2, clamp } from '../world/terrain.js';
+import { loadImage, loadTexture } from '../core/images.js';
 
 const srgb = (r, g, b) => new THREE.Color().setRGB(r / 255, g / 255, b / 255, THREE.SRGBColorSpace);
 const mixC = (a, b, t) => a.clone().lerp(b, t);
@@ -44,10 +45,8 @@ export function createAtmosphere(scene, camera, renderer) {
     const N = 16, S = 256, data = new Uint8Array(S * S * 4 * N);
     const cv = document.createElement('canvas'); cv.width = cv.height = S;
     const cx = cv.getContext('2d', { willReadFrequently: true });
-    const imgs = await Promise.all([...Array(N)].map((_, i) => new Promise((res, rej) => {
-      const im = new Image(); im.onload = () => res(im); im.onerror = rej;
-      im.src = `assets/tex/caustic_${String(i).padStart(2, '0')}.png`;
-    })));
+    const imgs = await Promise.all([...Array(N)].map((_, i) => loadImage(`assets/tex/caustic_${String(i).padStart(2, '0')}.png`)));
+    if (imgs.some((im) => !im)) throw new Error('caustic frames missing');
     imgs.forEach((im, i) => { cx.clearRect(0, 0, S, S); cx.drawImage(im, 0, 0, S, S); data.set(cx.getImageData(0, 0, S, S).data, i * S * S * 4); });
     const tex = new THREE.DataArrayTexture(data, S, S, N);
     tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
@@ -57,7 +56,7 @@ export function createAtmosphere(scene, camera, renderer) {
     shared.uCaust.value = tex;
   })().catch((e) => console.warn('caustics not loaded', e));
 
-  const softTex = new THREE.TextureLoader().load('assets/tex/soft.png');
+  const softTex = loadTexture('assets/tex/soft.png');
 
   // seabed material: baked vertex colours + caustics (only faces looking up, fading with depth / distance)
   function groundMaterial() {
