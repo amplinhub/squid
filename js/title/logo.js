@@ -45,7 +45,7 @@ function starfish(b) {
   b.blob(0.06, 0.05, 0.13, 0.04, 0.04, 0.02, 2, 6, 0, rgb(200, 150, 70), null);
 }
 
-function buildFloor() {
+export function buildFloor() {
   const R = makeRng(2024), b = new MeshBuilder(R, 4096);
   b.mode = 1; b.jit = 0.05;
   const N = 26, M = 18, hx = [], hy = [], hz = [];
